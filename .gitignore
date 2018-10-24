@@ -1,4 +1,2 @@
 .idea
-*.iml
-.idea/vcs.xml
 venv/
