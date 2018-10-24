@@ -3,6 +3,7 @@ import numpy as np
 import random
 
 '''  CONFIGURATION  '''
+
 env = gym.make('FrozenLake-v0')
 # learning rate
 alpha = 0.5
@@ -72,7 +73,8 @@ for i_episode in range(nEpisodes):
         if done:
             episode_rewards.append(reward)
             if i_episode % 100 == 99:
-                print("Episode {} finished. Average reward: {}".format(i_episode + 1, np.mean(episode_rewards)))
+                print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, np.mean(episode_rewards)))
+                episode_rewards = []
             break
 
 env.close()
