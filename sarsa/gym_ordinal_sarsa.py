@@ -20,12 +20,8 @@ max_timesteps = 1000
 
 # Flag whether to randomize action estimates at initialization
 randomize = True
-# Flag whether to base ordinal_values on probability of ordinal occurrences (or on summed ordinal score)
-ordinal_based_flag = True
 # Number of ordinals (possible different rewards)
 n_ordinals = 3
-# Specify ordinal position of neutral reward (indexed from zero)
-neutral_reward_pos = 1
 
 
 '''  FUNCTION DEFINITION  '''
@@ -33,7 +29,6 @@ neutral_reward_pos = 1
 
 # Mapping of reward value to ordinal reward (has to be configured per game)
 def reward_to_ordinal(reward_value):
-
     if reward_value == -10:
         return 0
     if reward_value == -1:
@@ -54,9 +49,8 @@ def choose_action(state):
         return greedy_action
 
 
-# ORDINAL_VALUE UPDATE (ORDINAL-BASED): based on probability of ordinal reward occurrence for each action
+# Updates ordinal_values based on probability of ordinal reward occurrence for each action
 def update_ordinal_values(prev_obs, prev_act, obs, act, ordinal):
-
     # reduce old data weight
     for i in range(n_ordinals):
         if done:
@@ -69,30 +63,8 @@ def update_ordinal_values(prev_obs, prev_act, obs, act, ordinal):
     ordinal_values[prev_obs][prev_act][ordinal] += alpha
 
 
-# ORDINAL_VALUE UPDATE (SCORE-BASED): based on probability of ordinal reward sum per episode for each action
-def update_ordinal_scores(prev_obs, prev_act, obs, act, ordinal):
-    # shift ordinal to have value 0 at neutral reward
-    ordinal -= neutral_reward_pos
-
-    for i in range(n_ordinals):
-        if done:
-            ordinal_values[prev_obs][prev_act][i] *= (1 - alpha)
-        else:
-            ordinal_values[prev_obs][prev_act][i] *= (1 - alpha)
-
-            if i - ordinal < 0 or i - ordinal >= n_ordinals:
-                back_prop_value = 0
-            else:
-                # TODO: Extend array into the direction of back-propagation
-                back_prop_value = ordinal_values[obs][act][i - ordinal]
-
-            # back-propagate future ordinal values to previous state and action
-            ordinal_values[prev_obs][prev_act][i] += alpha * (gamma * back_prop_value)
-
-
 # Updates borda_values for one state given the ordinal_values
 def update_borda_scores():
-
     # sum up all ordinal values per action for given state
     ordinal_value_sum_per_action = np.zeros(n_actions)
     for action_a in range(n_actions):
@@ -158,11 +130,6 @@ else:
 # ORDINAL_VALUES (3-dimensional array with ordinal_value (array of floats) for each action in each state)
 ordinal_values = [[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] for z in range(n_observations)]
 
-if not ordinal_based_flag:
-    for ordinal_state_values in ordinal_values:
-        for ordinal_action_values in ordinal_state_values:
-            ordinal_action_values[neutral_reward_pos] = 1.0
-
 
 ''' EXECUTION '''
 
@@ -181,13 +148,8 @@ for i_episode in range(n_episodes):
 
         if prev_observation is not None:
             received_ordinal = reward_to_ordinal(reward)
-
             # update ordinal_values with received ordinal
-            if ordinal_based_flag:
-                update_ordinal_values(prev_observation, prev_action, observation, action, received_ordinal)
-            else:
-                update_ordinal_scores(prev_observation, prev_action, observation, action, received_ordinal)
-
+            update_ordinal_values(prev_observation, prev_action, observation, action, received_ordinal)
             # update borda_values with updated ordinal_values
             update_borda_scores()
 
