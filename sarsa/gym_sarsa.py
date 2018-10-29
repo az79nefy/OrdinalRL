@@ -2,41 +2,61 @@ import gym
 import numpy as np
 import random
 
+
 '''  CONFIGURATION  '''
 
-env = gym.make('FrozenLake-v0')
-# learning rate
+env = gym.make('Taxi-v2')
+
+# Learning rate
 alpha = 0.5
-# discount factor
+# Discount factor
 gamma = 0.9
-# epsilon-greedy exploration for action choice
+# Epsilon in epsilon-greedy exploration (for action choice)
 epsilon = 0.05
-# flag whether to randomize action estimates at initialization
-randomize = True
-# maximal timesteps to be used per episode
+
+# Number of episodes to be run
+n_episodes = 2000
+# Maximal timesteps to be used per episode
 max_timesteps = 1000
-# number of episodes to be run
-nEpisodes = 2000
+
+# Flag whether to randomize action estimates at initialization
+randomize = True
+
+
+''' INITIALIZATION '''
 
 # number of possible actions
-nActions = env.action_space.n
+n_actions = env.action_space.n
 # number of possible states
-nStates = env.observation_space.n
+n_states = env.observation_space.n
 
-''' EXECUTION '''
-
-# 2-dimensional array: q-values for each action (e.g. [Left, Down, Right, Up]) in each state
-q_values = [[1.0 for x in range(nActions)] for y in range(nStates)]
+# Q_VALUES: (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
+q_values = [[1.0 for x in range(n_actions)] for y in range(n_states)]
 if randomize:
-    q_values = [[random.random()/10 for x in range(nActions)] for y in range(nStates)]
+    q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_states)]
 
 
-# action choice with epsilon greedy exploration policy
+'''  FUNCTION DEFINITION  '''
+
+
+# Q_VALUE UPDATE: based on probability of ordinal reward occurrence for each action
+def update_q_values(prev_obs, prev_act, obs, act, rew):
+    q_old = q_values[prev_obs][prev_act]
+    if done:
+        q_new = (1 - alpha) * q_old + alpha * rew
+    else:
+        q_new = (1 - alpha) * q_old + alpha * (rew + gamma * q_values[obs][act])
+
+    # update q_value
+    q_values[prev_obs][prev_act] = q_new
+
+
+# Chooses action with epsilon greedy exploration policy
 def choose_action(state):
     greedy_action = np.argmax(q_values[state])
     # non-greedy action is chose with probability epsilon
     if random.random() < epsilon:
-        non_greedy_actions = list(range(0, nActions))
+        non_greedy_actions = list(range(0, n_actions))
         non_greedy_actions.remove(greedy_action)
         return random.choice(non_greedy_actions)
     # greedy action is chosen with probability (1 - epsilon)
@@ -45,7 +65,7 @@ def choose_action(state):
 
 
 episode_rewards = []
-for i_episode in range(nEpisodes):
+for i_episode in range(n_episodes):
     observation = env.reset()
     action = choose_action(observation)
 
@@ -58,14 +78,7 @@ for i_episode in range(nEpisodes):
         action = choose_action(observation)
 
         if prev_observation is not None:
-            q_old = q_values[prev_observation][prev_action]
-            if done:
-                q_new = (1-alpha) * q_old + alpha * reward
-            else:
-                q_new = (1-alpha) * q_old + alpha * (reward + gamma * q_values[observation][action])
-
-            # update q_value
-            q_values[prev_observation][prev_action] = q_new
+            update_q_values(prev_observation, prev_action, observation, action, reward)
 
         prev_observation = observation
         prev_action = action
