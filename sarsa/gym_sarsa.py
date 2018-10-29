@@ -54,15 +54,15 @@ def update_q_values(prev_obs, prev_act, obs, act, rew):
 # Chooses action with epsilon greedy exploration policy
 def choose_action(state):
     greedy_action = np.argmax(q_values[state])
-    # non-greedy action is chose with probability epsilon
+    # choose random action with probability epsilon
     if random.random() < epsilon:
-        non_greedy_actions = list(range(0, n_actions))
-        non_greedy_actions.remove(greedy_action)
-        return random.choice(non_greedy_actions)
+        return random.randrange(n_actions)
     # greedy action is chosen with probability (1 - epsilon)
     else:
         return greedy_action
 
+
+''' EXECUTION '''
 
 episode_rewards = []
 for i_episode in range(n_episodes):

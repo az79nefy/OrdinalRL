@@ -44,15 +44,11 @@ def reward_to_ordinal(reward_value):
 
 # Chooses action with epsilon greedy exploration policy
 def choose_action(state):
-
     greedy_action = np.argmax(borda_values[state])
-    # non-greedy action is chose with probability epsilon
-    # TODO: Decrease epsilon over time (?)
+    # choose random action with probability epsilon
+    # TODO: Decrease epsilon over time
     if random.random() < epsilon:
-        non_greedy_actions = list(range(n_actions))
-        # TODO: Keep optimal action in possible actions (?)
-        non_greedy_actions.remove(greedy_action)
-        return random.choice(non_greedy_actions)
+        return random.randrange(n_actions)
     # greedy action is chosen with probability (1 - epsilon)
     else:
         return greedy_action
