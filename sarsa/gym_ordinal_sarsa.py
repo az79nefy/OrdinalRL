@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import random
 
+
 '''  CONFIGURATION  '''
 
 env = gym.make('Taxi-v2')
@@ -41,7 +42,6 @@ def reward_to_ordinal(reward_value):
 def choose_action(state):
     greedy_action = np.argmax(borda_values[state])
     # choose random action with probability epsilon
-    # TODO: Decrease epsilon over time
     if random.random() < epsilon:
         return random.randrange(n_actions)
     # greedy action is chosen with probability (1 - epsilon)
@@ -121,13 +121,13 @@ n_actions = env.action_space.n
 # number of possible states
 n_observations = env.observation_space.n
 
-# BORDA_VALUES (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
+# Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
 if randomize:
     borda_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)]
 else:
     borda_values = [[1.0 for x in range(n_actions)] for y in range(n_observations)]
 
-# ORDINAL_VALUES (3-dimensional array with ordinal_value (array of floats) for each action in each state)
+# Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each state)
 ordinal_values = [[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] for z in range(n_observations)]
 
 
@@ -165,3 +165,8 @@ for i_episode in range(n_episodes):
             break
 
 env.close()
+
+# TODO for non-discretized sarsa
+# TODO - decrease epsilon over time
+# TODO - change q_value update independent of "done"
+# TODO - change reward to episode_reward

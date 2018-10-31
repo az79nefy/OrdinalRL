@@ -30,7 +30,7 @@ n_actions = env.action_space.n
 # number of possible states
 n_states = env.observation_space.n
 
-# Q_VALUES: (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
+# Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
 q_values = [[1.0 for x in range(n_actions)] for y in range(n_states)]
 if randomize:
     q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_states)]
@@ -39,7 +39,7 @@ if randomize:
 '''  FUNCTION DEFINITION  '''
 
 
-# Q_VALUE UPDATE: based on probability of ordinal reward occurrence for each action
+# Updates Q_Values based on probability of ordinal reward occurrence for each action
 def update_q_values(prev_obs, prev_act, obs, act, rew):
     q_old = q_values[prev_obs][prev_act]
     if done:
