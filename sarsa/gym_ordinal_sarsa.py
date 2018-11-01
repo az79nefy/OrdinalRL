@@ -39,8 +39,8 @@ def reward_to_ordinal(reward_value):
 
 
 # Chooses action with epsilon greedy exploration policy
-def choose_action(state):
-    greedy_action = np.argmax(borda_values[state])
+def choose_action(obs):
+    greedy_action = np.argmax(borda_values[obs])
     # choose random action with probability epsilon
     if random.random() < epsilon:
         return random.randrange(n_actions)
@@ -60,9 +60,9 @@ def update_ordinal_values(prev_obs, prev_act, obs, act, ordinal):
     ordinal_values[prev_obs][prev_act][ordinal] += alpha
 
 
-# Updates borda_values for one state given the ordinal_values
+# Updates borda_values for one observation given the ordinal_values
 def update_borda_scores():
-    # sum up all ordinal values per action for given state
+    # sum up all ordinal values per action for given observation
     ordinal_value_sum_per_action = np.zeros(n_actions)
     for action_a in range(n_actions):
         for ordinal_value in ordinal_values[prev_observation][action_a]:
@@ -115,16 +115,16 @@ def update_borda_scores():
 
 # number of possible actions
 n_actions = env.action_space.n
-# number of possible states
+# number of possible observations
 n_observations = env.observation_space.n
 
-# Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
+# Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
 if randomize:
     borda_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)]
 else:
     borda_values = [[1.0 for x in range(n_actions)] for y in range(n_observations)]
 
-# Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each state)
+# Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each observation)
 ordinal_values = [[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] for z in range(n_observations)]
 
 

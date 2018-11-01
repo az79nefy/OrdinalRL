@@ -27,14 +27,14 @@ randomize = False
 
 # number of possible actions
 n_actions = env.action_space.n
-# number of possible states
-n_states = env.observation_space.n
+# number of possible observations
+n_observations = env.observation_space.n
 
-# Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
+# Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
 if randomize:
-    q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_states)]
+    q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)]
 else:
-    q_values = [[1.0 for x in range(n_actions)] for y in range(n_states)]
+    q_values = [[1.0 for x in range(n_actions)] for y in range(n_observations)]
 
 
 '''  FUNCTION DEFINITION  '''
@@ -48,8 +48,8 @@ def update_q_values(prev_obs, prev_act, obs, act, rew):
 
 
 # Chooses action with epsilon greedy exploration policy
-def choose_action(state):
-    greedy_action = np.argmax(q_values[state])
+def choose_action(obs):
+    greedy_action = np.argmax(q_values[obs])
     # choose random action with probability epsilon
     if random.random() < epsilon:
         return random.randrange(n_actions)
