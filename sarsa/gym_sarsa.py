@@ -8,19 +8,19 @@ import random
 env = gym.make('Taxi-v2')
 
 # Learning rate
-alpha = 0.5
+alpha = 0.1
 # Discount factor
 gamma = 0.9
 # Epsilon in epsilon-greedy exploration (for action choice)
-epsilon = 0.05
+epsilon = 1.0
 
 # Number of episodes to be run
-n_episodes = 2000
+n_episodes = 50000
 # Maximal timesteps to be used per episode
 max_timesteps = 1000
 
 # Flag whether to randomize action estimates at initialization
-randomize = True
+randomize = False
 
 
 ''' INITIALIZATION '''
@@ -31,9 +31,10 @@ n_actions = env.action_space.n
 n_states = env.observation_space.n
 
 # Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each state)
-q_values = [[1.0 for x in range(n_actions)] for y in range(n_states)]
 if randomize:
     q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_states)]
+else:
+    q_values = [[1.0 for x in range(n_actions)] for y in range(n_states)]
 
 
 '''  FUNCTION DEFINITION  '''
@@ -42,12 +43,7 @@ if randomize:
 # Updates Q_Values based on probability of ordinal reward occurrence for each action
 def update_q_values(prev_obs, prev_act, obs, act, rew):
     q_old = q_values[prev_obs][prev_act]
-    if done:
-        q_new = (1 - alpha) * q_old + alpha * rew
-    else:
-        q_new = (1 - alpha) * q_old + alpha * (rew + gamma * q_values[obs][act])
-
-    # update q_value
+    q_new = (1 - alpha) * q_old + alpha * (rew + gamma * q_values[obs][act])
     q_values[prev_obs][prev_act] = q_new
 
 
@@ -72,10 +68,12 @@ for i_episode in range(n_episodes):
     prev_observation = None
     prev_action = None
 
+    episode_reward = 0
     for t in range(max_timesteps):
         observation, reward, done, info = env.step(action)
         # next action to be executed (based on new observation)
         action = choose_action(observation)
+        episode_reward += reward
 
         if prev_observation is not None:
             update_q_values(prev_observation, prev_action, observation, action, reward)
@@ -84,7 +82,8 @@ for i_episode in range(n_episodes):
         prev_action = action
 
         if done:
-            episode_rewards.append(reward)
+            epsilon -= 2 / n_episodes if epsilon > 0 else 0
+            episode_rewards.append(episode_reward)
             if i_episode % 100 == 99:
                 print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, np.mean(episode_rewards)))
                 episode_rewards = []

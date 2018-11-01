@@ -8,19 +8,19 @@ import random
 env = gym.make('Taxi-v2')
 
 # Learning rate
-alpha = 0.5
+alpha = 0.1
 # Discount factor
 gamma = 0.9
 # Epsilon in epsilon-greedy exploration (for action choice)
-epsilon = 0.05
+epsilon = 1.0
 
 # Number of episodes to be run
-n_episodes = 20000
+n_episodes = 50000
 # Maximal timesteps to be used per episode
 max_timesteps = 1000
 
 # Flag whether to randomize action estimates at initialization
-randomize = True
+randomize = False
 # Number of ordinals (possible different rewards)
 n_ordinals = 3
 
@@ -53,11 +53,8 @@ def choose_action(state):
 def update_ordinal_values(prev_obs, prev_act, obs, act, ordinal):
     # reduce old data weight
     for i in range(n_ordinals):
-        if done:
-            ordinal_values[prev_obs][prev_act][i] *= (1 - alpha)
-        else:
-            ordinal_values[prev_obs][prev_act][i] *= (1 - alpha)
-            ordinal_values[prev_obs][prev_act][i] += alpha * (gamma * ordinal_values[obs][act][i])
+        ordinal_values[prev_obs][prev_act][i] *= (1 - alpha)
+        ordinal_values[prev_obs][prev_act][i] += alpha * (gamma * ordinal_values[obs][act][i])
 
     # add new data point
     ordinal_values[prev_obs][prev_act][ordinal] += alpha
@@ -141,10 +138,12 @@ for i_episode in range(n_episodes):
     prev_observation = None
     prev_action = None
 
+    episode_reward = 0
     for t in range(max_timesteps):
         observation, reward, done, info = env.step(action)
         # next action to be executed (based on new observation)
         action = choose_action(observation)
+        episode_reward += reward
 
         if prev_observation is not None:
             received_ordinal = reward_to_ordinal(reward)
@@ -157,7 +156,8 @@ for i_episode in range(n_episodes):
         prev_action = action
 
         if done:
-            episode_rewards.append(reward)
+            epsilon -= 2 / n_episodes if epsilon > 0 else 0
+            episode_rewards.append(episode_reward)
             if i_episode % 100 == 99:
                 print("Episode {} finished. Average reward since last check: {}"
                       .format(i_episode + 1, np.mean(episode_rewards)))
@@ -165,8 +165,3 @@ for i_episode in range(n_episodes):
             break
 
 env.close()
-
-# TODO for non-discretized sarsa
-# TODO - decrease epsilon over time
-# TODO - change q_value update independent of "done"
-# TODO - change reward to episode_reward
