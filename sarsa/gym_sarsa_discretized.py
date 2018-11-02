@@ -20,7 +20,7 @@ n_episodes = 50000
 max_timesteps = 1000
 
 # Flag whether to randomize action estimates at initialization
-randomize = True
+randomize = False
 
 
 ''' INITIALIZATION '''
@@ -98,7 +98,7 @@ for i_episode in range(n_episodes):
         episode_reward += reward
 
         if prev_observation is not None:
-            update_q_values(prev_observation, prev_action, observation, action, episode_reward)
+            update_q_values(prev_observation, prev_action, observation, action, reward)
 
         prev_observation = observation
         prev_action = action
