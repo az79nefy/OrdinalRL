@@ -1,0 +1,20 @@
+# MountainCar-v0
+car_pos_space = np.linspace(-1.2, 0.6, 10)
+car_vel_space = np.linspace(-0.07, 0.07, 10)
+observation_space = [car_pos_space, car_vel_space]
+
+# CartPole-v0
+cart_pos_space = np.linspace(-2.4, 2.4, 10)
+cart_vel_space = np.linspace(-4, 4, 10)
+pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
+pole_theta_vel_space = np.linspace(-4, 4, 10)
+observation_space = [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
+
+# Acrobot-v1
+cos_theta1_space = np.linspace(-1, 1, 10)
+sin_theta1_space = np.linspace(-1, 1, 10)
+cos_theta2_space = np.linspace(-1, 1, 10)
+sin_theta2_space = np.linspace(-1, 1, 10)
+theta1_dot_space = np.linspace(-4 * np.pi, 4 * np.pi, 10)
+theta2_dot_space = np.linspace(-9 * np.pi, 9 * np.pi, 10)
+observation_space = [cos_theta1_space, sin_theta1_space, cos_theta2_space, sin_theta2_space, theta1_dot_space, theta2_dot_space]
