@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import random
+import itertools
 
 
 '''  CONFIGURATION  '''
@@ -15,7 +16,7 @@ gamma = 0.9
 epsilon = 1.0
 
 # Number of episodes to be run
-n_episodes = 50000
+n_episodes = 5000
 # Maximal timesteps to be used per episode
 max_timesteps = 1000
 
@@ -24,48 +25,44 @@ randomize = False
 # Number of ordinals (possible different rewards)
 n_ordinals = 2
 
-''' INITIALIZATION '''
-
-# number of possible actions
-n_actions = env.action_space.n
-
-# discretize the observation space
-pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
-pole_theta_vel_space = np.linspace(-4, 4, 10)
+# Discretize the observation space (specify manually)
 cart_pos_space = np.linspace(-2.4, 2.4, 10)
 cart_vel_space = np.linspace(-4, 4, 10)
+pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
+pole_theta_vel_space = np.linspace(-4, 4, 10)
+observation_space = [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
+
+
+''' INITIALIZATION '''
+
+# Number of possible actions
+n_actions = env.action_space.n
+
+# List of all possible discrete observations
+observation_range = [range(len(i)+1) for i in observation_space]
 
 borda_values = {}
-for i in range(len(cart_pos_space) + 1):
-    for j in range(len(cart_vel_space) + 1):
-        for k in range(len(pole_theta_space) + 1):
-            for l in range(len(pole_theta_vel_space) + 1):
-                for a in range(n_actions):
-                    if randomize:
-                        borda_values[(i, j, k, l), a] = random.random() / 10
-                    else:
-                        borda_values[(i, j, k, l), a] = 1.0
+for observation in list(itertools.product(*observation_range)):
+    for a in range(n_actions):
+        if randomize:
+            borda_values[observation, a] = random.random() / 10
+        else:
+            borda_values[observation, a] = 1.0
 
 ordinal_values = {}
-for i in range(len(cart_pos_space) + 1):
-    for j in range(len(cart_vel_space) + 1):
-        for k in range(len(pole_theta_space) + 1):
-            for l in range(len(pole_theta_vel_space) + 1):
-                for a in range(n_actions):
-                    ordinal_values[(i, j, k, l), a] = [0.0 for x in range(n_ordinals)]
+for observation in list(itertools.product(*observation_range)):
+    for a in range(n_actions):
+        ordinal_values[observation, a] = [0.0 for x in range(n_ordinals)]
 
 
 '''  FUNCTION DEFINITION  '''
 
 
 def get_discrete_observation(obs):
-    cart_x, cart_x_dot, cart_theta, cart_theta_dot = obs
-    cart_x = int(np.digitize(cart_x, cart_pos_space))
-    cart_x_dot = int(np.digitize(cart_x_dot, cart_vel_space))
-    cart_theta = int(np.digitize(cart_theta, pole_theta_space))
-    cart_theta_dot = int(np.digitize(cart_theta_dot, pole_theta_vel_space))
-
-    return cart_x, cart_x_dot, cart_theta, cart_theta_dot
+    discrete_observation = []
+    for obs_idx in range(len(obs)):
+        discrete_observation.append(int(np.digitize(obs[obs_idx], observation_space[obs_idx])))
+    return tuple(discrete_observation)
 
 
 # Mapping of reward value to ordinal reward (has to be configured per game)

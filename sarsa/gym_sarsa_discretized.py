@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import random
+import itertools
 
 
 '''  CONFIGURATION  '''
@@ -22,42 +23,40 @@ max_timesteps = 1000
 # Flag whether to randomize action estimates at initialization
 randomize = False
 
+# Discretize the observation space (specify manually)
+cart_pos_space = np.linspace(-2.4, 2.4, 10)
+cart_vel_space = np.linspace(-4, 4, 10)
+pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
+pole_theta_vel_space = np.linspace(-4, 4, 10)
+observation_space = [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
+
 
 ''' INITIALIZATION '''
 
-# number of possible actions
+# Number of possible actions
 n_actions = env.action_space.n
 
-# discretize the observation space
-pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
-pole_theta_vel_space = np.linspace(-4, 4, 10)
-cart_pos_space = np.linspace(-2.4, 2.4, 10)
-cart_vel_space = np.linspace(-4, 4, 10)
+# List of all possible discrete observations
+observation_range = [range(len(i)+1) for i in observation_space]
 
-# Q_Values (n-dimensional array with float-value for each action in each (n-1)-dimensional observation space)
+# Q_Values (dictionary with float-value for each action and each possible observation)
 q_values = {}
-for i in range(len(cart_pos_space) + 1):
-    for j in range(len(cart_vel_space) + 1):
-        for k in range(len(pole_theta_space) + 1):
-            for l in range(len(pole_theta_vel_space) + 1):
-                for a in range(n_actions):
-                    if randomize:
-                        q_values[(i, j, k, l), a] = random.random() / 10
-                    else:
-                        q_values[(i, j, k, l), a] = 0
+for observation in list(itertools.product(*observation_range)):
+    for a in range(n_actions):
+        if randomize:
+            q_values[observation, a] = random.random() / 10
+        else:
+            q_values[observation, a] = 0
 
 
 '''  FUNCTION DEFINITION  '''
 
 
 def get_discrete_observation(obs):
-    cart_x, cart_x_dot, cart_theta, cart_theta_dot = obs
-    cart_x = int(np.digitize(cart_x, cart_pos_space))
-    cart_x_dot = int(np.digitize(cart_x_dot, cart_vel_space))
-    cart_theta = int(np.digitize(cart_theta, pole_theta_space))
-    cart_theta_dot = int(np.digitize(cart_theta_dot, pole_theta_vel_space))
-
-    return cart_x, cart_x_dot, cart_theta, cart_theta_dot
+    discrete_observation = []
+    for obs_idx in range(len(obs)):
+        discrete_observation.append(int(np.digitize(obs[obs_idx], observation_space[obs_idx])))
+    return tuple(discrete_observation)
 
 
 # Updates Q_Values based on probability of ordinal reward occurrence for each action
