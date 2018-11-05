@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import itertools
 
@@ -59,6 +60,14 @@ def get_discrete_observation(obs):
     return tuple(discrete_observation)
 
 
+# Returns Boolean, whether the win-condition of the environment has been met
+def check_win_condition():
+    if done and episode_reward == 200:
+        return True
+    else:
+        return False
+
+
 # Updates Q_Values based on probability of ordinal reward occurrence for each action
 def update_q_values(prev_obs, prev_act, obs, act, rew):
     q_old = q_values[prev_obs, prev_act]
@@ -80,7 +89,12 @@ def choose_action(obs):
 
 ''' EXECUTION '''
 
-episode_rewards = []
+win_rate = 0
+win_rate_list = []
+
+episode_reward_list = []
+mean_reward_list = []
+
 for i_episode in range(n_episodes):
     observation = get_discrete_observation(env.reset())
     action = choose_action(observation)
@@ -103,11 +117,37 @@ for i_episode in range(n_episodes):
         prev_action = action
 
         if done:
+            # gradually reduce epsilon after every done episode
             epsilon -= 2 / n_episodes if epsilon > 0 else 0
-            episode_rewards.append(episode_reward)
+            # update reward and win statistics
+            episode_reward_list.append(episode_reward)
+            if check_win_condition():
+                win_rate += 1.0 / 100
+
+            # compute reward and win statistics every 100 episodes
             if i_episode % 100 == 99:
-                print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, np.mean(episode_rewards)))
-                episode_rewards = []
+                mean_reward = np.mean(episode_reward_list)
+                print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, mean_reward))
+                # store episode reward mean and win rate over last 100 episodes for plotting purposes
+                mean_reward_list.append(mean_reward)
+                win_rate_list.append(win_rate)
+                # reset running reward and win statistics
+                episode_reward_list = []
+                win_rate = 0
             break
+
+# plot win rate
+plt.figure()
+plt.plot(list(range(100, n_episodes + 100, 100)), win_rate_list)
+plt.xlabel('Number of episodes')
+plt.ylabel('Win rate')
+
+# plot average score
+plt.figure()
+plt.plot(list(range(100, n_episodes + 100, 100)), mean_reward_list)
+plt.xlabel('Number of episodes')
+plt.ylabel('Average score')
+
+plt.show()
 
 env.close()

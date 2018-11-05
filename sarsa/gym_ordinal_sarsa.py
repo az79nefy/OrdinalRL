@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 
 
@@ -36,6 +37,14 @@ def reward_to_ordinal(reward_value):
         return 1
     else:
         return 2
+
+
+# Returns Boolean, whether the win-condition of the environment has been met
+def check_win_condition():
+    if done and reward == 20:
+        return True
+    else:
+        return False
 
 
 # Chooses action with epsilon greedy exploration policy
@@ -130,7 +139,12 @@ ordinal_values = [[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] f
 
 ''' EXECUTION '''
 
-episode_rewards = []
+win_rate = 0
+win_rate_list = []
+
+episode_reward_list = []
+mean_reward_list = []
+
 for i_episode in range(n_episodes):
     observation = env.reset()
     action = choose_action(observation)
@@ -156,12 +170,37 @@ for i_episode in range(n_episodes):
         prev_action = action
 
         if done:
+            # gradually reduce epsilon after every done episode
             epsilon -= 2 / n_episodes if epsilon > 0 else 0
-            episode_rewards.append(episode_reward)
+            # update reward and win statistics
+            episode_reward_list.append(episode_reward)
+            if check_win_condition():
+                win_rate += 1.0 / 100
+
+            # compute reward and win statistics every 100 episodes
             if i_episode % 100 == 99:
-                print("Episode {} finished. Average reward since last check: {}"
-                      .format(i_episode + 1, np.mean(episode_rewards)))
-                episode_rewards = []
+                mean_reward = np.mean(episode_reward_list)
+                print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, mean_reward))
+                # store episode reward mean and win rate over last 100 episodes for plotting purposes
+                mean_reward_list.append(mean_reward)
+                win_rate_list.append(win_rate)
+                # reset running reward and win statistics
+                episode_reward_list = []
+                win_rate = 0
             break
+
+# plot win rate
+plt.figure()
+plt.plot(list(range(100, n_episodes + 100, 100)), win_rate_list)
+plt.xlabel('Number of episodes')
+plt.ylabel('Win rate')
+
+# plot average score
+plt.figure()
+plt.plot(list(range(100, n_episodes + 100, 100)), mean_reward_list)
+plt.xlabel('Number of episodes')
+plt.ylabel('Average score')
+
+plt.show()
 
 env.close()
