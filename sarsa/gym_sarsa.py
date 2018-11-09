@@ -35,7 +35,7 @@ n_observations = env.observation_space.n
 if randomize:
     q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)]
 else:
-    q_values = [[1.0 for x in range(n_actions)] for y in range(n_observations)]
+    q_values = [[0.0 for x in range(n_actions)] for y in range(n_observations)]
 
 
 '''  FUNCTION DEFINITION  '''
