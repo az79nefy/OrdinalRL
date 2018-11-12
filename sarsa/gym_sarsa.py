@@ -33,9 +33,9 @@ n_observations = env.observation_space.n
 
 # Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
 if randomize:
-    q_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)]
+    q_values = np.array([[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)])
 else:
-    q_values = [[0.0 for x in range(n_actions)] for y in range(n_observations)]
+    q_values = np.array([[0.0 for x in range(n_actions)] for y in range(n_observations)])
 
 
 '''  FUNCTION DEFINITION  '''
@@ -51,9 +51,9 @@ def check_win_condition():
 
 # Updates Q_Values based on probability of ordinal reward occurrence for each action
 def update_q_values(prev_obs, prev_act, obs, act, rew):
-    q_old = q_values[prev_obs][prev_act]
-    q_new = (1 - alpha) * q_old + alpha * (rew + gamma * q_values[obs][act])
-    q_values[prev_obs][prev_act] = q_new
+    q_old = q_values[prev_obs, prev_act]
+    q_new = (1 - alpha) * q_old + alpha * (rew + gamma * q_values[obs, act])
+    q_values[prev_obs, prev_act] = q_new
 
 
 # Chooses action with epsilon greedy exploration policy

@@ -62,11 +62,11 @@ def choose_action(obs):
 def update_ordinal_values(prev_obs, prev_act, obs, act, ordinal):
     # reduce old data weight
     for i in range(n_ordinals):
-        ordinal_values[prev_obs][prev_act][i] *= (1 - alpha)
-        ordinal_values[prev_obs][prev_act][i] += alpha * (gamma * ordinal_values[obs][act][i])
+        ordinal_values[prev_obs, prev_act, i] *= (1 - alpha)
+        ordinal_values[prev_obs, prev_act, i] += alpha * (gamma * ordinal_values[obs, act, i])
 
     # add new data point
-    ordinal_values[prev_obs][prev_act][ordinal] += alpha
+    ordinal_values[prev_obs, prev_act, ordinal] += alpha
 
 
 # Updates borda_values for one observation given the ordinal_values
@@ -74,7 +74,7 @@ def update_borda_scores():
     # sum up all ordinal values per action for given observation
     ordinal_value_sum_per_action = np.zeros(n_actions)
     for action_a in range(n_actions):
-        for ordinal_value in ordinal_values[prev_observation][action_a]:
+        for ordinal_value in ordinal_values[prev_observation, action_a]:
             ordinal_value_sum_per_action[action_a] += ordinal_value
 
     # count actions whose ordinal value sum is not zero (no comparision possible for actions without ordinal_value)
@@ -85,12 +85,12 @@ def update_borda_scores():
     for action_a in range(n_actions):
         # if action has not yet recorded any ordinal values, action has to be played (set borda_value to 1.0)
         if ordinal_value_sum_per_action[action_a] == 0:
-            borda_values[prev_observation][action_a] = 1.0
+            borda_values[prev_observation, action_a] = 1.0
             continue
 
         if actions_to_compare_count < 1:
             # set lower than 1.0 (borda_value for zero_actions is 1.0)
-            borda_values[prev_observation][action_a] = 0.5
+            borda_values[prev_observation, action_a] = 0.5
         else:
             # over all actions: sum up the probabilities that action_a wins against the given action
             winning_probability_a_sum = 0
@@ -107,17 +107,17 @@ def update_borda_scores():
                     # running ordinal probability that action_b is worse than current investigated ordinal
                     worse_probability_b = 0
                     for ordinal_count in range(n_ordinals):
-                        ordinal_probability_a = ordinal_values[prev_observation][action_a][ordinal_count] \
+                        ordinal_probability_a = ordinal_values[prev_observation, action_a, ordinal_count] \
                                                      / ordinal_value_sum_per_action[action_a]
                         # ordinal_probability_b is also the tie probability
-                        ordinal_probability_b = (ordinal_values[prev_observation][action_b][ordinal_count] /
+                        ordinal_probability_b = (ordinal_values[prev_observation, action_b, ordinal_count] /
                                                  ordinal_value_sum_per_action[action_b])
                         winning_probability_a += ordinal_probability_a * \
                             (worse_probability_b + ordinal_probability_b / 2.0)
                         worse_probability_b += ordinal_probability_b
                     winning_probability_a_sum += winning_probability_a
             # normalize summed up probabilities with number of actions that have been compared
-            borda_values[prev_observation][action_a] = winning_probability_a_sum / actions_to_compare_count
+            borda_values[prev_observation, action_a] = winning_probability_a_sum / actions_to_compare_count
 
 
 ''' INITIALIZATION '''
@@ -129,12 +129,12 @@ n_observations = env.observation_space.n
 
 # Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
 if randomize:
-    borda_values = [[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)]
+    borda_values = np.array([[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)])
 else:
-    borda_values = [[1.0 for x in range(n_actions)] for y in range(n_observations)]
+    borda_values = np.array([[1.0 for x in range(n_actions)] for y in range(n_observations)])
 
 # Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each observation)
-ordinal_values = [[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] for z in range(n_observations)]
+ordinal_values = np.array([[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] for z in range(n_observations)])
 
 
 ''' EXECUTION '''

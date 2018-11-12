@@ -56,8 +56,8 @@ def check_win_condition():
 # Updates Q_Values based on probability of ordinal reward occurrence for each action
 def update_q_values(prev_obs, prev_act, obs, act, rew):
     global q_values
-    q_old = q_values[prev_obs][prev_act]
-    q_target = rew + gamma * q_values[obs][act]
+    q_old = q_values[prev_obs, prev_act]
+    q_target = rew + gamma * q_values[obs, act]
     q_values = q_values + alpha * (q_target - q_old) * eligibility_trace
 
 
@@ -99,7 +99,7 @@ for i_episode in range(n_episodes):
 
         if prev_observation is not None:
             # increase eligibility trace entry for executed observation-action pair
-            eligibility_trace[prev_observation][prev_action] += 1
+            eligibility_trace[prev_observation, prev_action] += 1
             update_q_values(prev_observation, prev_action, observation, action, reward)
             # decay eligibility trace after update
             eligibility_trace *= gamma * lambda_

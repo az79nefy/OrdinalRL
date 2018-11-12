@@ -90,10 +90,10 @@ def check_win_condition():
 def update_ordinal_values(prev_obs, prev_act, obs, ordinal):
     greedy_action = np.argmax(borda_values[obs])
     for i in range(n_ordinals):
-        ordinal_values[prev_obs, prev_act][i] *= (1 - alpha)
-        ordinal_values[prev_obs, prev_act][i] += alpha * (gamma * ordinal_values[obs, greedy_action][i])
+        ordinal_values[prev_obs, prev_act, i] *= (1 - alpha)
+        ordinal_values[prev_obs, prev_act, i] += alpha * (gamma * ordinal_values[obs, greedy_action, i])
 
-    ordinal_values[prev_obs, prev_act][ordinal] += alpha
+    ordinal_values[prev_obs, prev_act, ordinal] += alpha
 
 
 # Updates borda_values for one observation given the ordinal_values
@@ -134,10 +134,10 @@ def update_borda_scores():
                     # running ordinal probability that action_b is worse than current investigated ordinal
                     worse_probability_b = 0
                     for ordinal_count in range(n_ordinals):
-                        ordinal_probability_a = ordinal_values[prev_observation, action_a][ordinal_count] \
+                        ordinal_probability_a = ordinal_values[prev_observation, action_a, ordinal_count] \
                                                      / ordinal_value_sum_per_action[action_a]
                         # ordinal_probability_b is also the tie probability
-                        ordinal_probability_b = (ordinal_values[prev_observation, action_b][ordinal_count] /
+                        ordinal_probability_b = (ordinal_values[prev_observation, action_b, ordinal_count] /
                                                  ordinal_value_sum_per_action[action_b])
                         winning_probability_a += ordinal_probability_a * \
                             (worse_probability_b + ordinal_probability_b / 2.0)

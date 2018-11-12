@@ -95,8 +95,8 @@ def check_win_condition():
 def update_ordinal_values(prev_obs, prev_act, obs, act, ordinal):
     for i in range(n_ordinals):
         rew = 1 if i == ordinal else 0
-        ordinal_value_old = ordinal_values[prev_obs][prev_act][i]
-        ordinal_value_target = rew + gamma * ordinal_values[obs][act][i]
+        ordinal_value_old = ordinal_values[prev_obs, prev_act, i]
+        ordinal_value_target = rew + gamma * ordinal_values[obs, act, i]
         ordinal_values[:, :, i] += alpha * (ordinal_value_target - ordinal_value_old) * eligibility_trace
 
 
@@ -138,10 +138,10 @@ def update_borda_scores():
                     # running ordinal probability that action_b is worse than current investigated ordinal
                     worse_probability_b = 0
                     for ordinal_count in range(n_ordinals):
-                        ordinal_probability_a = ordinal_values[prev_observation, action_a][ordinal_count] \
+                        ordinal_probability_a = ordinal_values[prev_observation, action_a, ordinal_count] \
                                                      / ordinal_value_sum_per_action[action_a]
                         # ordinal_probability_b is also the tie probability
-                        ordinal_probability_b = (ordinal_values[prev_observation, action_b][ordinal_count] /
+                        ordinal_probability_b = (ordinal_values[prev_observation, action_b, ordinal_count] /
                                                  ordinal_value_sum_per_action[action_b])
                         winning_probability_a += ordinal_probability_a * \
                             (worse_probability_b + ordinal_probability_b / 2.0)
@@ -191,7 +191,7 @@ for i_episode in range(n_episodes):
         if prev_observation is not None:
             received_ordinal = reward_to_ordinal(reward)
             # increase eligibility trace entry for executed observation-action pair
-            eligibility_trace[prev_observation][prev_action] += 1
+            eligibility_trace[prev_observation, prev_action] += 1
             # update ordinal_values with received ordinal
             update_ordinal_values(prev_observation, prev_action, observation, action, received_ordinal)
             # update borda_values with updated ordinal_values
