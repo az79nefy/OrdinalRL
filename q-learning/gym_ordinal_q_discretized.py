@@ -27,6 +27,7 @@ randomize = False
 n_ordinals = 2
 
 # Discretize the observation space (specify manually)
+n_observations = 11**4
 cart_pos_space = np.linspace(-2.4, 2.4, 10)
 cart_vel_space = np.linspace(-4, 4, 10)
 pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
@@ -42,18 +43,21 @@ n_actions = env.action_space.n
 # List of all possible discrete observations
 observation_range = [range(len(i)+1) for i in observation_space]
 
-borda_values = {}
+# Dictionary that maps discretized observations to array indices
+observation_to_index = {}
+index_counter = 0
 for observation in list(itertools.product(*observation_range)):
-    for a in range(n_actions):
-        if randomize:
-            borda_values[observation, a] = random.random() / 10
-        else:
-            borda_values[observation, a] = 1.0
+    observation_to_index[observation] = index_counter
+    index_counter += 1
 
-ordinal_values = {}
-for observation in list(itertools.product(*observation_range)):
-    for a in range(n_actions):
-        ordinal_values[observation, a] = [0.0 for x in range(n_ordinals)]
+# Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
+if randomize:
+    borda_values = np.array([[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)])
+else:
+    borda_values = np.array([[1.0 for x in range(n_actions)] for y in range(n_observations)])
+
+# Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each observation)
+ordinal_values = np.array([[[0.0 for x in range(n_ordinals)] for y in range(n_actions)] for z in range(n_observations)])
 
 
 '''  FUNCTION DEFINITION  '''
@@ -63,7 +67,7 @@ def get_discrete_observation(obs):
     discrete_observation = []
     for obs_idx in range(len(obs)):
         discrete_observation.append(int(np.digitize(obs[obs_idx], observation_space[obs_idx])))
-    return tuple(discrete_observation)
+    return observation_to_index[tuple(discrete_observation)]
 
 
 # Mapping of reward value to ordinal reward (has to be configured per game)
@@ -84,8 +88,7 @@ def check_win_condition():
 
 # Updates Q_Values based on probability of ordinal reward occurrence for each action
 def update_ordinal_values(prev_obs, prev_act, obs, ordinal):
-    possible_q_values = np.array([borda_values[obs, act] for act in range(n_actions)])
-    greedy_action = np.argmax(possible_q_values)
+    greedy_action = np.argmax(borda_values[obs])
     for i in range(n_ordinals):
         ordinal_values[prev_obs, prev_act][i] *= (1 - alpha)
         ordinal_values[prev_obs, prev_act][i] += alpha * (gamma * ordinal_values[obs, greedy_action][i])
@@ -146,8 +149,7 @@ def update_borda_scores():
 
 # Chooses action with epsilon greedy exploration policy
 def choose_action(obs):
-    possible_q_values = np.array([borda_values[obs, act] for act in range(n_actions)])
-    greedy_action = np.argmax(possible_q_values)
+    greedy_action = np.argmax(borda_values[obs])
     # choose random action with probability epsilon
     if np.random.random() < epsilon:
         return random.randrange(n_actions)

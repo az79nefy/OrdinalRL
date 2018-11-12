@@ -25,6 +25,7 @@ max_timesteps = 1000
 randomize = False
 
 # Discretize the observation space (specify manually)
+n_observations = 11**4
 cart_pos_space = np.linspace(-2.4, 2.4, 10)
 cart_vel_space = np.linspace(-4, 4, 10)
 pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
@@ -40,14 +41,18 @@ n_actions = env.action_space.n
 # List of all possible discrete observations
 observation_range = [range(len(i)+1) for i in observation_space]
 
-# Q_Values (dictionary with float-value for each action and each possible observation)
-q_values = {}
+# Dictionary that maps discretized observations to array indices
+observation_to_index = {}
+index_counter = 0
 for observation in list(itertools.product(*observation_range)):
-    for a in range(n_actions):
-        if randomize:
-            q_values[observation, a] = random.random() / 10
-        else:
-            q_values[observation, a] = 0
+    observation_to_index[observation] = index_counter
+    index_counter += 1
+
+# Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
+if randomize:
+    q_values = np.array([[random.random() / 10 for x in range(n_actions)] for y in range(n_observations)])
+else:
+    q_values = np.array([[0.0 for x in range(n_actions)] for y in range(n_observations)])
 
 
 '''  FUNCTION DEFINITION  '''
@@ -57,7 +62,7 @@ def get_discrete_observation(obs):
     discrete_observation = []
     for obs_idx in range(len(obs)):
         discrete_observation.append(int(np.digitize(obs[obs_idx], observation_space[obs_idx])))
-    return tuple(discrete_observation)
+    return observation_to_index[tuple(discrete_observation)]
 
 
 # Returns Boolean, whether the win-condition of the environment has been met
@@ -77,8 +82,7 @@ def update_q_values(prev_obs, prev_act, obs, act, rew):
 
 # Chooses action with epsilon greedy exploration policy
 def choose_action(obs):
-    possible_actions = np.array([q_values[obs, act] for act in range(n_actions)])
-    greedy_action = np.argmax(possible_actions)
+    greedy_action = np.argmax(q_values[obs])
     # choose random action with probability epsilon
     if random.random() < epsilon:
         return random.randrange(n_actions)
