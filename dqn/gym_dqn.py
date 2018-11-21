@@ -13,46 +13,40 @@ import random
 env = gym.make('Taxi-v2')
 
 # Learning rate
-alpha = 0.1
+alpha = 0.001
 # Discount factor
 gamma = 0.9
 # Epsilon in epsilon-greedy exploration (for action choice)
 epsilon = 1.0
 
 # Number of episodes to be run
-n_episodes = 50000
+n_episodes = 200
 # Maximal timesteps to be used per episode
 max_timesteps = 1000
-
-# Flag whether to randomize action estimates at initialization
-randomize = False
 
 
 ''' INITIALIZATION '''
 
 # number of possible actions
 n_actions = env.action_space.n
-# number of possible observations
-n_observations = env.observation_space.n
 
-
-# Neural Net for DQN
-def build_model(input_size):
-    neural_net = Sequential()
-    neural_net.add(Dense(6, input_dim=input_size, activation='relu'))
-    neural_net.add(Dense(6, activation='relu'))
-    neural_net.add(Dense(n_actions, activation='linear'))
-    neural_net.compile(loss='mse', optimizer=Adam(lr=alpha))
-    return neural_net
-
-
+# DQN Parameters
 n_inputs = 1
-model = build_model(n_inputs)
 batch_size = 32
 memory = deque(maxlen=2000)
 
 
 '''  FUNCTION DEFINITION  '''
+
+
+# Neural Net for DQN
+def build_model():
+    neural_net = Sequential()
+    neural_net.add(Dense(6, input_dim=n_inputs, activation='relu'))
+    neural_net.add(Dense(6, activation='relu'))
+    neural_net.add(Dense(n_actions, activation='linear'))
+    neural_net.compile(loss='mse', optimizer=Adam(lr=alpha))
+    return neural_net
 
 
 # Returns Boolean, whether the win-condition of the environment has been met
@@ -70,22 +64,24 @@ target = (rew + gamma * np.max(targetNetwork.predict(obs)[0]))
 '''
 
 
-def remember(prev_obs, prev_act, obs, rew):
-    memory.append((prev_obs, prev_act, obs, rew))
+def remember(prev_obs, prev_act, obs, rew, d):
+    memory.append((prev_obs, prev_act, obs, rew, d))
 
 
 def replay(batch_size):
     mini_batch = random.sample(memory, batch_size)
-    x_batch = []
-    y_batch = []
-    for prev_obs, prev_act, obs, rew in mini_batch:
+    x_batch, y_batch = [], []
+    for prev_obs, prev_act, obs, rew, d in mini_batch:
         prediction = model.predict(prev_obs)
-        target = (rew + gamma * np.max(model.predict(obs)[0]))
+        if not d:
+            target = rew + gamma * np.max(model.predict(obs)[0])
+        else:
+            target = rew
         # fit predicted value of previous action in previous observation to target value of max_action
         prediction[0][prev_act] = target
         x_batch.append(prev_obs[0])
         y_batch.append(prediction[0])
-    model.fit(np.array(x_batch), np.array(y_batch), epochs=1, verbose=0)
+    model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch), verbose=0)
 
 
 # Chooses action with epsilon greedy exploration policy
@@ -107,6 +103,7 @@ win_rate_list = []
 episode_reward_list = []
 mean_reward_list = []
 
+model = build_model()
 for i_episode in range(n_episodes):
     observation = env.reset()
     observation = np.reshape(observation, [1, n_inputs])
@@ -124,7 +121,7 @@ for i_episode in range(n_episodes):
         episode_reward += reward
 
         if prev_observation is not None:
-            remember(prev_observation, prev_action, observation, reward)
+            remember(prev_observation, prev_action, observation, reward, done)
 
         if len(memory) > batch_size:
             replay(batch_size)
@@ -154,13 +151,13 @@ for i_episode in range(n_episodes):
 
 # plot win rate
 plt.figure()
-plt.plot(list(range(100, n_episodes + 100, 100)), win_rate_list)
+plt.plot(list(range(10, n_episodes + 10, 10)), win_rate_list)
 plt.xlabel('Number of episodes')
 plt.ylabel('Win rate')
 
 # plot average score
 plt.figure()
-plt.plot(list(range(100, n_episodes + 100, 100)), mean_reward_list)
+plt.plot(list(range(10, n_episodes + 10, 10)), mean_reward_list)
 plt.xlabel('Number of episodes')
 plt.ylabel('Average score')
 

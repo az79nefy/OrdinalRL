@@ -6,7 +6,6 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import random
-import itertools
 
 
 '''  CONFIGURATION  '''
@@ -14,27 +13,16 @@ import itertools
 env = gym.make('CartPole-v0')
 
 # Learning rate
-alpha = 0.1
+alpha = 0.001
 # Discount factor
 gamma = 0.9
 # Epsilon in epsilon-greedy exploration (for action choice)
 epsilon = 1.0
 
 # Number of episodes to be run
-n_episodes = 1000
+n_episodes = 200
 # Maximal timesteps to be used per episode
 max_timesteps = 1000
-
-# Flag whether to randomize action estimates at initialization
-randomize = False
-
-# Discretize the observation space (specify manually)
-n_observations = 11**4
-cart_pos_space = np.linspace(-2.4, 2.4, 10)
-cart_vel_space = np.linspace(-4, 4, 10)
-pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
-pole_theta_vel_space = np.linspace(-4, 4, 10)
-observation_space = [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
 
 
 ''' INITIALIZATION '''
@@ -42,41 +30,23 @@ observation_space = [cart_pos_space, cart_vel_space, pole_theta_space, pole_thet
 # Number of possible actions
 n_actions = env.action_space.n
 
-# List of all possible discrete observations
-observation_range = [range(len(i)+1) for i in observation_space]
-
-# Dictionary that maps discretized observations to array indices
-observation_to_index = {}
-index_counter = 0
-for observation in list(itertools.product(*observation_range)):
-    observation_to_index[observation] = index_counter
-    index_counter += 1
-
-
-# Neural Net for DQN
-def build_model(input_size):
-    neural_net = Sequential()
-    neural_net.add(Dense(6, input_dim=input_size, activation='relu'))
-    neural_net.add(Dense(6, activation='relu'))
-    neural_net.add(Dense(n_actions, activation='linear'))
-    neural_net.compile(loss='mse', optimizer=Adam(lr=alpha))
-    return neural_net
-
-
-n_inputs = 1
-model = build_model(n_inputs)
-batch_size = 32
-memory = deque(maxlen=2000)
+# DQN Parameters
+n_inputs = env.observation_space.shape[0]
+batch_size = 64
+memory = deque(maxlen=20000)
 
 
 '''  FUNCTION DEFINITION  '''
 
 
-def get_discrete_observation(obs):
-    discrete_observation = []
-    for obs_idx in range(len(obs)):
-        discrete_observation.append(int(np.digitize(obs[obs_idx], observation_space[obs_idx])))
-    return observation_to_index[tuple(discrete_observation)]
+# Neural Net for DQN
+def build_model():
+    neural_net = Sequential()
+    neural_net.add(Dense(24, input_dim=n_inputs, activation='relu'))
+    neural_net.add(Dense(24, activation='relu'))
+    neural_net.add(Dense(n_actions, activation='linear'))
+    neural_net.compile(loss='mse', optimizer=Adam(lr=alpha))
+    return neural_net
 
 
 # Returns Boolean, whether the win-condition of the environment has been met
@@ -94,22 +64,24 @@ target = (rew + gamma * np.max(targetNetwork.predict(obs)[0]))
 '''
 
 
-def remember(prev_obs, prev_act, obs, rew):
-    memory.append((prev_obs, prev_act, obs, rew))
+def remember(prev_obs, prev_act, obs, rew, d):
+    memory.append((prev_obs, prev_act, obs, rew, d))
 
 
 def replay(batch_size):
     mini_batch = random.sample(memory, batch_size)
-    x_batch = []
-    y_batch = []
-    for prev_obs, prev_act, obs, rew in mini_batch:
+    x_batch, y_batch = [], []
+    for prev_obs, prev_act, obs, rew, d in mini_batch:
         prediction = model.predict(prev_obs)
-        target = (rew + gamma * np.max(model.predict(obs)[0]))
+        if not d:
+            target = rew + gamma * np.max(model.predict(obs)[0])
+        else:
+            target = rew
         # fit predicted value of previous action in previous observation to target value of max_action
         prediction[0][prev_act] = target
         x_batch.append(prev_obs[0])
         y_batch.append(prediction[0])
-    model.fit(np.array(x_batch), np.array(y_batch), epochs=1, verbose=0)
+    model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch), verbose=0)
 
 
 # Chooses action with epsilon greedy exploration policy
@@ -131,10 +103,10 @@ win_rate_list = []
 episode_reward_list = []
 mean_reward_list = []
 
+model = build_model()
 for i_episode in range(n_episodes):
-    observation = env.reset()
-    observation = get_discrete_observation(env.reset())
-    observation = np.reshape(observation, [1, n_inputs])
+    observation_cont = env.reset()
+    observation = np.reshape(observation_cont, [1, n_inputs])
     action = choose_action(observation)
 
     prev_observation = None
@@ -143,15 +115,13 @@ for i_episode in range(n_episodes):
     episode_reward = 0
     for t in range(max_timesteps):
         observation_cont, reward, done, info = env.step(action)
-        observation = observation_cont
-        observation = get_discrete_observation(observation_cont)
-        observation = np.reshape(observation, [1, n_inputs])
+        observation = np.reshape(observation_cont, [1, n_inputs])
         # next action to be executed (based on new observation)
         action = choose_action(observation)
         episode_reward += reward
 
         if prev_observation is not None:
-            remember(prev_observation, prev_action, observation, reward)
+            remember(prev_observation, prev_action, observation, reward, done)
 
         if len(memory) > batch_size:
             replay(batch_size)
@@ -181,13 +151,13 @@ for i_episode in range(n_episodes):
 
 # plot win rate
 plt.figure()
-plt.plot(list(range(100, n_episodes + 100, 100)), win_rate_list)
+plt.plot(list(range(10, n_episodes + 100, 10)), win_rate_list)
 plt.xlabel('Number of episodes')
 plt.ylabel('Win rate')
 
 # plot average score
 plt.figure()
-plt.plot(list(range(100, n_episodes + 100, 100)), mean_reward_list)
+plt.plot(list(range(10, n_episodes + 10, 10)), mean_reward_list)
 plt.xlabel('Number of episodes')
 plt.ylabel('Average score')
 
