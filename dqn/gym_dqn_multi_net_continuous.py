@@ -156,7 +156,7 @@ for i_episode in range(n_episodes):
 
 # plot win rate
 plt.figure()
-plt.plot(list(range(10, n_episodes + 100, 10)), win_rate_list)
+plt.plot(list(range(10, n_episodes + 10, 10)), win_rate_list)
 plt.xlabel('Number of episodes')
 plt.ylabel('Win rate')
 
