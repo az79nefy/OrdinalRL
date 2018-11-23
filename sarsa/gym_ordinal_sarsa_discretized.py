@@ -150,7 +150,7 @@ def update_borda_scores():
 def choose_action(obs):
     greedy_action = np.argmax(borda_values[obs])
     # choose random action with probability epsilon
-    if np.random.random() < epsilon:
+    if random.random() < epsilon:
         return random.randrange(n_actions)
     # greedy action is chosen with probability (1 - epsilon)
     else:
