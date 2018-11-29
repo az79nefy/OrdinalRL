@@ -119,7 +119,8 @@ class SarsaAgent:
         else:
             return greedy_action
 
-    def decrease_epsilon(self, n_episodes):
+    def end_episode(self, n_episodes):
+        # gradually reduce epsilon after every done episode
         self.epsilon -= 2 / n_episodes if self.epsilon > 0 else 0
 
     def preprocess_observation(self, obs):

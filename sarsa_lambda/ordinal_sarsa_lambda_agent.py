@@ -17,7 +17,7 @@ class SarsaLambdaAgent:
         else:
             self.borda_values = np.full((n_observations, n_actions), 0.0)
 
-            self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
+        self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
 
         self.eligibility_trace = np.full((n_observations, n_actions), 0.0)
         self.win_rates = []

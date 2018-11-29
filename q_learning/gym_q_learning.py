@@ -45,8 +45,7 @@ for i_episode in range(n_episodes):
         prev_action = action
 
         if done:
-            # gradually reduce epsilon after every done episode
-            agent.decrease_epsilon(n_episodes)
+            agent.end_episode(n_episodes)
             # update reward and win statistics
             episode_rewards.append(episode_reward)
             episode_wins.append(float(agent.check_win_condition(reward, episode_reward, done)))

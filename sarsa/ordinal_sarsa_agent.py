@@ -16,7 +16,7 @@ class SarsaAgent:
         else:
             self.borda_values = np.full((n_observations, n_actions), 0.0)
 
-            self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
+        self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
 
         self.win_rates = []
         self.average_rewards = []
@@ -96,7 +96,8 @@ class SarsaAgent:
         else:
             return greedy_action
 
-    def decrease_epsilon(self, n_episodes):
+    def end_episode(self, n_episodes):
+        # gradually reduce epsilon after every done episode
         self.epsilon -= 2 / n_episodes if self.epsilon > 0 else 0
 
     def preprocess_observation(self, obs):
