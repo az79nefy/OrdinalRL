@@ -22,6 +22,7 @@ class DQNAgent:
         self.win_rates = []
         self.average_rewards = []
 
+    # Creates neural net for DQN
     def build_model(self, n_inputs):
         neural_net = Sequential()
         neural_net.add(Dense(6, input_dim=n_inputs, activation='relu'))
@@ -79,10 +80,10 @@ class DQNAgent:
             return False
 
     def evaluate(self, i_episode, episode_rewards, episode_wins):
-        # compute average episode reward and win rate over last 100 episodes
+        # compute average episode reward and win rate over last episodes
         average_reward = sum(episode_rewards) / len(episode_rewards)
         win_rate = sum(episode_wins) / len(episode_wins)
-        # store average episode reward and win rate over last 100 episodes for plotting purposes
+        # store average episode reward and win rate over last episodes for plotting purposes
         self.average_rewards.append(average_reward)
         self.win_rates.append(win_rate)
         print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, average_reward))
