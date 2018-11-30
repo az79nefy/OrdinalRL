@@ -80,8 +80,8 @@ class SarsaAgent:
 
     def evaluate(self, i_episode, episode_rewards, episode_wins):
         # compute average episode reward and win rate over last 100 episodes
-        average_reward = sum(episode_rewards) / 100.0
-        win_rate = sum(episode_wins) / 100.0
+        average_reward = sum(episode_rewards) / len(episode_rewards)
+        win_rate = sum(episode_wins) / len(episode_wins)
         # store average episode reward and win rate over last 100 episodes for plotting purposes
         self.average_rewards.append(average_reward)
         self.win_rates.append(win_rate)
