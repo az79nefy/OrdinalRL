@@ -15,6 +15,16 @@ observation_dim = 4
 ''' HYPERPARAMETERS '''
 
 # Adjust further hyperparameters (e.g. learning rate and discount factor)
+# alpha: Learning rate
+# gamma: Discount factor
+# epsilon: Epsilon in epsilon-greedy exploration (probability for random action choice)
+# randomize: Flag whether to randomize action estimates at initialization
+# observation_dim: Dimensionality of observation provided by environment
+# batch_size: Number of memories being replayed in one replay step
+# memory_len: Maximum numbers of memories that are stored
+# n_actions: Number of possible actions
+# n_observations: Number of possible observations
+# n_ordinals: Number of ordinals (possible different rewards)
 agent = DQNAgent(alpha=0.001, gamma=0.9, epsilon=1.0, randomize=False, observation_dim=observation_dim, batch_size=64,
                  memory_len=20000, n_actions=env.action_space.n, n_ordinals=n_ordinals, n_observations=n_observations)
 
@@ -51,7 +61,6 @@ for i_episode in range(n_episodes):
             episode_rewards.append(episode_reward)
             episode_wins.append(float(agent.check_win_condition(reward, episode_reward, done)))
 
-            # compute reward and win statistics every 100 episodes
             if i_episode % step_size == step_size-1:
                 agent.evaluate(i_episode, episode_rewards, episode_wins)
                 # reset running reward and win statistics

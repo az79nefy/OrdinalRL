@@ -20,8 +20,8 @@ n_observations = env.observation_space.n
 # lambda_: Controls decay of eligibility trace after each action
 # randomize: Flag whether to randomize action estimates at initialization
 # n_actions: Number of possible actions
-# n_observations: Number of possible observations
 # n_ordinals: Number of ordinals (possible different rewards)
+# n_observations: Number of possible observations
 agent = SarsaLambdaAgent(alpha=0.1, gamma=0.9, epsilon=1.0, lambda_=0.7, randomize=False,
                          n_actions=env.action_space.n, n_ordinals=n_ordinals, n_observations=n_observations)
 
@@ -58,7 +58,6 @@ for i_episode in range(n_episodes):
             episode_rewards.append(episode_reward)
             episode_wins.append(float(agent.check_win_condition(reward, episode_reward, done)))
 
-            # compute reward and win statistics every 100 episodes
             if i_episode % step_size == step_size-1:
                 agent.evaluate(i_episode, episode_rewards, episode_wins)
                 # reset running reward and win statistics
