@@ -10,6 +10,7 @@ class QAgent:
         self.epsilon = epsilon
         self.n_actions = n_actions
 
+        # Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
         if randomize:
             self.q_values = np.full((n_observations, n_actions), random.random()/10)
         else:
@@ -53,10 +54,10 @@ class QAgent:
             return False
 
     def evaluate(self, i_episode, episode_rewards, episode_wins):
-        # compute average episode reward and win rate over last 100 episodes
+        # compute average episode reward and win rate over last episodes
         average_reward = sum(episode_rewards) / len(episode_rewards)
         win_rate = sum(episode_wins) / len(episode_wins)
-        # store average episode reward and win rate over last 100 episodes for plotting purposes
+        # store average episode reward and win rate over last episodes for plotting purposes
         self.average_rewards.append(average_reward)
         self.win_rates.append(win_rate)
         print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, average_reward))
