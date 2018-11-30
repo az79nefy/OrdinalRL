@@ -14,16 +14,19 @@ class SarsaAgent:
         self.observation_space = self.init_observation_space()
         self.observation_to_index = self.build_obs_dict(self.observation_space)
 
+        # Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
         if randomize:
             self.borda_values = np.full((n_observations, n_actions), random.random()/10)
         else:
             self.borda_values = np.full((n_observations, n_actions), 0.0)
 
+        # Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each observation)
         self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
 
         self.win_rates = []
         self.average_rewards = []
 
+    # Defines discrete observation space
     @staticmethod
     def init_observation_space():
         cart_pos_space = np.linspace(-2.4, 2.4, 10)
@@ -46,7 +49,9 @@ class SarsaAgent:
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
         ordinal = self.reward_to_ordinal(reward, episode_reward, done)
+        # update ordinal_values with received ordinal
         self.update_ordinal_values(prev_obs, prev_act, obs, act, ordinal)
+        # update borda_values with updated ordinal_values
         self.update_borda_scores(prev_obs)
 
     # Updates ordinal_values based on probability of ordinal reward occurrence for each action
@@ -145,10 +150,10 @@ class SarsaAgent:
             return False
 
     def evaluate(self, i_episode, episode_rewards, episode_wins):
-        # compute average episode reward and win rate over last 100 episodes
+        # compute average episode reward and win rate over last episodes
         average_reward = sum(episode_rewards) / len(episode_rewards)
         win_rate = sum(episode_wins) / len(episode_wins)
-        # store average episode reward and win rate over last 100 episodes for plotting purposes
+        # store average episode reward and win rate over last episodes for plotting purposes
         self.average_rewards.append(average_reward)
         self.win_rates.append(win_rate)
         print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, average_reward))

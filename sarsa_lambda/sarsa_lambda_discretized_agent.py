@@ -14,15 +14,18 @@ class SarsaLambdaAgent:
         self.observation_space = self.init_observation_space()
         self.observation_to_index = self.build_obs_dict(self.observation_space)
 
+        # Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
         if randomize:
             self.q_values = np.full((n_observations, n_actions), random.random()/10)
         else:
             self.q_values = np.full((n_observations, n_actions), 0.0)
 
+        # Eligibility Trace (2-dimensional array with float-values for each action in each observation)
         self.eligibility_trace = np.full((n_observations, n_actions), 0.0)
         self.win_rates = []
         self.average_rewards = []
 
+    # Defines discrete observation space
     @staticmethod
     def init_observation_space():
         cart_pos_space = np.linspace(-2.4, 2.4, 10)
@@ -44,8 +47,10 @@ class SarsaLambdaAgent:
         return observation_to_index
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
+        # increase eligibility trace entry for executed observation-action pair
         self.eligibility_trace[prev_obs, prev_act] += 1
         self.update_q_values(prev_obs, prev_act, obs, act, reward)
+        # decay eligibility trace after update
         self.eligibility_trace *= self.gamma * self.lambda_
 
     # Updates Q_Values based on received reward
@@ -67,6 +72,7 @@ class SarsaLambdaAgent:
     def end_episode(self, n_episodes):
         # gradually reduce epsilon after every done episode
         self.epsilon -= 2 / n_episodes if self.epsilon > 0 else 0
+        # reset eligibility trace after every episode
         self.eligibility_trace *= 0
 
     def preprocess_observation(self, obs):
@@ -84,10 +90,10 @@ class SarsaLambdaAgent:
             return False
 
     def evaluate(self, i_episode, episode_rewards, episode_wins):
-        # compute average episode reward and win rate over last 100 episodes
+        # compute average episode reward and win rate over last episodes
         average_reward = sum(episode_rewards) / len(episode_rewards)
         win_rate = sum(episode_wins) / len(episode_wins)
-        # store average episode reward and win rate over last 100 episodes for plotting purposes
+        # store average episode reward and win rate over last episodes for plotting purposes
         self.average_rewards.append(average_reward)
         self.win_rates.append(win_rate)
         print("Episode {} finished. Average reward since last check: {}".format(i_episode + 1, average_reward))
