@@ -8,10 +8,11 @@ import random
 
 
 class DQNAgent:
-    def __init__(self, alpha, gamma, epsilon, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, randomize):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
+        self.epsilon_min = epsilon_min
         self.n_actions = n_actions
         self.n_ordinals = n_ordinals
         self.n_inputs = observation_dim
@@ -127,7 +128,7 @@ class DQNAgent:
 
     def end_episode(self, n_episodes):
         # gradually reduce epsilon after every done episode
-        self.epsilon -= 2 / n_episodes if self.epsilon > 0 else 0
+        self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
 
     def preprocess_observation(self, obs):
         return np.reshape(obs, [1, self.n_inputs])

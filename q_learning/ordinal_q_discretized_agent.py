@@ -5,10 +5,11 @@ import itertools
 
 
 class QAgent:
-    def __init__(self, alpha, gamma, epsilon, n_actions, n_ordinals, n_observations, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, randomize):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
+        self.epsilon_min = epsilon_min
         self.n_actions = n_actions
         self.n_ordinals = n_ordinals
         self.observation_space = self.init_observation_space()
@@ -127,7 +128,7 @@ class QAgent:
 
     def end_episode(self, n_episodes):
         # gradually reduce epsilon after every done episode
-        self.epsilon -= 2 / n_episodes if self.epsilon > 0 else 0
+        self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
 
     def preprocess_observation(self, obs):
         discrete_observation = []
