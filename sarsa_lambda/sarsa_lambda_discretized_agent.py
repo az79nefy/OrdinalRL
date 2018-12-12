@@ -48,7 +48,8 @@ class SarsaLambdaAgent:
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
         # increase eligibility trace entry for executed observation-action pair
-        self.eligibility_trace[prev_obs, prev_act] += 1
+        self.eligibility_trace[prev_obs, :] *= 0
+        self.eligibility_trace[prev_obs, prev_act] = 1
         self.update_q_values(prev_obs, prev_act, obs, act, reward)
         # decay eligibility trace after update
         self.eligibility_trace *= self.gamma * self.lambda_
