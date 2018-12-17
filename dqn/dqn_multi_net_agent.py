@@ -8,7 +8,7 @@ import random
 
 
 class DQNAgent:
-    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, replace_target_iter, randomize):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
@@ -19,8 +19,11 @@ class DQNAgent:
         self.batch_size = batch_size
         self.memory = deque(maxlen=memory_len)
         # creation of a neural net for every action
-        self.action_nets = [self.build_model(self.n_inputs) for _ in range(n_actions)]
+        self.eval_action_nets = [self.build_model(self.n_inputs) for _ in range(n_actions)]
+        self.target_action_nets = [self.build_model(self.n_inputs) for _ in range(n_actions)]
+        self.replace_target_iter = replace_target_iter
 
+        self.replay_counter = 0
         self.win_rates = []
         self.average_rewards = []
 
@@ -42,22 +45,28 @@ class DQNAgent:
         self.memory.append((prev_obs, prev_act, obs, rew, d))
 
     def replay(self):
+        # copy evaluation action nets to target action nets at first replay and then every 200 replay steps
+        if self.replay_counter % self.replace_target_iter == 0:
+            for a in range(self.n_actions):
+                self.target_action_nets[a].set_weights(self.eval_action_nets[a].get_weights())
+        self.replay_counter += 1
+
         mini_batch = random.sample(self.memory, self.batch_size)
         for prev_obs, prev_act, obs, rew, d in mini_batch:
             if not d:
                 action_predictions = []
-                for act_net in self.action_nets:
+                for act_net in self.target_action_nets:
                     action_predictions.append(act_net.predict(obs)[0])
                 target = rew + self.gamma * np.max(action_predictions)
             else:
                 target = rew
             # fit predicted value of previous action in previous observation to target value of max_action
-            self.action_nets[prev_act].fit(prev_obs, [[target]], verbose=0)
+            self.eval_action_nets[prev_act].fit(prev_obs, [[target]], verbose=0)
 
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
         action_predictions = []
-        for act_net in self.action_nets:
+        for act_net in self.eval_action_nets:
             action_predictions.append(act_net.predict(obs)[0])
         greedy_action = np.argmax(action_predictions)
         # choose random action with probability epsilon

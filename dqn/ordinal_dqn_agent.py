@@ -8,7 +8,7 @@ import random
 
 
 class DQNAgent:
-    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, replace_target_iter, randomize):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
@@ -26,8 +26,11 @@ class DQNAgent:
         self.batch_size = batch_size
         self.memory = deque(maxlen=memory_len)
         # creation of a neural net for every action
-        self.action_nets = [self.build_model(self.n_inputs) for _ in range(n_actions)]
+        self.eval_action_nets = [self.build_model(self.n_inputs) for _ in range(n_actions)]
+        self.target_action_nets = [self.build_model(self.n_inputs) for _ in range(n_actions)]
+        self.replace_target_iter = replace_target_iter
 
+        self.replay_counter = 0
         self.win_rates = []
         self.average_rewards = []
 
@@ -51,24 +54,30 @@ class DQNAgent:
         self.memory.append((prev_obs, prev_act, obs, rew, d))
 
     def replay(self):
+        # copy evaluation action nets to target action nets at first replay and then every 200 replay steps
+        if self.replay_counter % self.replace_target_iter == 0:
+            for a in range(self.n_actions):
+                self.target_action_nets[a].set_weights(self.eval_action_nets[a].get_weights())
+        self.replay_counter += 1
+
         mini_batch = random.sample(self.memory, self.batch_size)
         for prev_obs, prev_act, obs, ordinal, d in mini_batch:
             greedy_action = np.argmax(self.borda_values[obs[0]])
             if not d:
-                target = self.gamma * self.action_nets[greedy_action].predict(obs)[0]
+                target = self.gamma * self.target_action_nets[greedy_action].predict(obs)[0]
                 target[ordinal] += 1
             else:
                 target = np.zeros(self.n_ordinals)
                 target[ordinal] += 1
             # fit predicted value of previous action in previous observation to target value of max_action
-            self.action_nets[prev_act].fit(prev_obs, [[target]], verbose=0)
+            self.eval_action_nets[prev_act].fit(prev_obs, [[target]], verbose=0)
 
     # Updates borda_values for one observation given the ordinal_values
     def update_borda_scores(self, prev_obs):
         # sum up all ordinal values per action for given observation
         ordinal_value_sum_per_action = np.zeros(self.n_actions)
         for action_a in range(self.n_actions):
-            for ordinal_value in self.action_nets[action_a].predict(prev_obs)[0]:
+            for ordinal_value in self.eval_action_nets[action_a].predict(prev_obs)[0]:
                 ordinal_value_sum_per_action[action_a] += ordinal_value
 
         # count actions whose ordinal value sum is not zero (no comparision possible for actions without ordinal_value)
@@ -101,8 +110,8 @@ class DQNAgent:
                         # running ordinal probability that action_b is worse than current investigated ordinal
                         worse_probability_b = 0
                         # predict ordinal values for action a and b
-                        ordinal_values_a = self.action_nets[action_a].predict(prev_obs)[0]
-                        ordinal_values_b = self.action_nets[action_b].predict(prev_obs)[0]
+                        ordinal_values_a = self.eval_action_nets[action_a].predict(prev_obs)[0]
+                        ordinal_values_b = self.eval_action_nets[action_b].predict(prev_obs)[0]
                         for ordinal_count in range(self.n_ordinals):
                             ordinal_probability_a = ordinal_values_a[ordinal_count] \
                                                     / ordinal_value_sum_per_action[action_a]

@@ -26,7 +26,7 @@ observation_dim = 4
 # n_observations: Number of possible observations
 # n_ordinals: Number of ordinals (possible different rewards)
 agent = DQNAgent(alpha=0.001, gamma=0.9, epsilon=1.0, epsilon_min=0.1, randomize=False, observation_dim=observation_dim, batch_size=64,
-                 memory_len=20000, n_actions=env.action_space.n, n_ordinals=n_ordinals, n_observations=n_observations)
+                 memory_len=20000, replace_target_iter=300, n_actions=env.action_space.n, n_ordinals=n_ordinals, n_observations=n_observations)
 
 # Number of episodes to be run
 n_episodes = 200

@@ -9,7 +9,7 @@ import itertools
 
 
 class DQNAgent:
-    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, replace_target_iter, randomize):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
@@ -21,8 +21,11 @@ class DQNAgent:
 
         self.batch_size = batch_size
         self.memory = deque(maxlen=memory_len)
-        self.model = self.build_model(self.n_inputs)
+        self.eval_model = self.build_model(self.n_inputs)
+        self.target_model = self.build_model(self.n_inputs)
+        self.replace_target_iter = replace_target_iter
 
+        self.replay_counter = 0
         self.win_rates = []
         self.average_rewards = []
 
@@ -65,23 +68,28 @@ class DQNAgent:
         self.memory.append((prev_obs, prev_act, obs, rew, d))
 
     def replay(self):
+        # copy evaluation model to target model at first replay and then every 200 replay steps
+        if self.replay_counter % self.replace_target_iter == 0:
+            self.target_model.set_weights(self.eval_model.get_weights())
+        self.replay_counter += 1
+
         mini_batch = random.sample(self.memory, self.batch_size)
         x_batch, y_batch = [], []
         for prev_obs, prev_act, obs, rew, d in mini_batch:
-            prediction = self.model.predict(prev_obs)
+            prediction = self.eval_model.predict(prev_obs)
             if not d:
-                target = rew + self.gamma * np.max(self.model.predict(obs)[0])
+                target = rew + self.gamma * np.max(self.target_model.predict(obs)[0])
             else:
                 target = rew
             # fit predicted value of previous action in previous observation to target value of max_action
             prediction[0][prev_act] = target
             x_batch.append(prev_obs[0])
             y_batch.append(prediction[0])
-        self.model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch), verbose=0)
+        self.eval_model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch), verbose=0)
 
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.model.predict(obs)[0])
+        greedy_action = np.argmax(self.eval_model.predict(obs)[0])
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)
