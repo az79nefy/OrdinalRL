@@ -12,12 +12,6 @@ class QAgent:
         self.n_actions = n_actions
         self.n_ordinals = n_ordinals
 
-        # Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
-        if randomize:
-            self.borda_values = np.full((n_observations, n_actions), random.random()/10)
-        else:
-            self.borda_values = np.full((n_observations, n_actions), 0.0)
-
         # Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each observation)
         self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
 
@@ -28,12 +22,10 @@ class QAgent:
         ordinal = self.reward_to_ordinal(reward, episode_reward, done)
         # update ordinal_values with received ordinal
         self.update_ordinal_values(prev_obs, prev_act, obs, ordinal)
-        # update borda_values with updated ordinal_values
-        self.update_borda_scores(prev_obs)
 
     # Updates ordinal_values based on probability of ordinal reward occurrence for each action
     def update_ordinal_values(self, prev_obs, prev_act, obs, ordinal):
-        greedy_action = np.argmax(self.borda_values[obs])
+        greedy_action = np.argmax(self.compute_borda_scores(obs))
         # reduce old data weight
         for i in range(self.n_ordinals):
             self.ordinal_values[prev_obs, prev_act, i] *= (1 - self.alpha)
@@ -42,28 +34,29 @@ class QAgent:
         # add new data point
         self.ordinal_values[prev_obs, prev_act, ordinal] += self.alpha
 
-    # Updates borda_values for one observation given the ordinal_values
-    def update_borda_scores(self, prev_obs):
+    # Computes borda_values for one observation given the ordinal_values
+    def compute_borda_scores(self, obs):
         # sum up all ordinal values per action for given observation
         ordinal_value_sum_per_action = np.zeros(self.n_actions)
         for action_a in range(self.n_actions):
-            for ordinal_value in self.ordinal_values[prev_obs, action_a]:
+            for ordinal_value in self.ordinal_values[obs, action_a]:
                 ordinal_value_sum_per_action[action_a] += ordinal_value
 
         # count actions whose ordinal value sum is not zero (no comparision possible for actions without ordinal_value)
         non_zero_action_count = np.count_nonzero(ordinal_value_sum_per_action)
         actions_to_compare_count = non_zero_action_count - 1
 
+        borda_scores = []
         # compute borda_values for action_a (probability that action_a wins against any other action)
         for action_a in range(self.n_actions):
             # if action has not yet recorded any ordinal values, action has to be played (set borda_value to 1.0)
             if ordinal_value_sum_per_action[action_a] == 0:
-                self.borda_values[prev_obs, action_a] = 1.0
+                borda_scores.append(1.0)
                 continue
 
             if actions_to_compare_count < 1:
                 # set lower than 1.0 (borda_value for zero_actions is 1.0)
-                self.borda_values[prev_obs, action_a] = 0.5
+                borda_scores.append(0.5)
             else:
                 # over all actions: sum up the probabilities that action_a wins against the given action
                 winning_probability_a_sum = 0
@@ -80,21 +73,22 @@ class QAgent:
                         # running ordinal probability that action_b is worse than current investigated ordinal
                         worse_probability_b = 0
                         for ordinal_count in range(self.n_ordinals):
-                            ordinal_probability_a = self.ordinal_values[prev_obs, action_a, ordinal_count] \
+                            ordinal_probability_a = self.ordinal_values[obs, action_a, ordinal_count] \
                                                     / ordinal_value_sum_per_action[action_a]
                             # ordinal_probability_b is also the tie probability
-                            ordinal_probability_b = (self.ordinal_values[prev_obs, action_b, ordinal_count] /
+                            ordinal_probability_b = (self.ordinal_values[obs, action_b, ordinal_count] /
                                                      ordinal_value_sum_per_action[action_b])
                             winning_probability_a += ordinal_probability_a * \
                                 (worse_probability_b + ordinal_probability_b / 2.0)
                             worse_probability_b += ordinal_probability_b
                         winning_probability_a_sum += winning_probability_a
                 # normalize summed up probabilities with number of actions that have been compared
-                self.borda_values[prev_obs, action_a] = winning_probability_a_sum / actions_to_compare_count
+                borda_scores.append(winning_probability_a_sum / actions_to_compare_count)
+        return borda_scores
 
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.borda_values[obs])
+        greedy_action = np.argmax(self.compute_borda_scores(obs))
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)

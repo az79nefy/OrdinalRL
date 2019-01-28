@@ -17,12 +17,6 @@ class DQNAgent:
         self.n_ordinals = n_ordinals
         self.n_inputs = observation_dim
 
-        # Borda_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
-        if randomize:
-            self.borda_values = np.full((n_observations, n_actions), random.random()/10)
-        else:
-            self.borda_values = np.full((n_observations, n_actions), 0.0)
-
         self.batch_size = batch_size
         self.memory = deque(maxlen=memory_len)
         # creation of a neural net for every action
@@ -48,7 +42,6 @@ class DQNAgent:
         self.remember(prev_obs, prev_act, obs, ordinal, done)
         if len(self.memory) > self.batch_size:
             self.replay()
-            self.update_borda_scores(prev_obs)
 
     def remember(self, prev_obs, prev_act, obs, rew, d):
         self.memory.append((prev_obs, prev_act, obs, rew, d))
@@ -62,7 +55,7 @@ class DQNAgent:
 
         mini_batch = random.sample(self.memory, self.batch_size)
         for prev_obs, prev_act, obs, ordinal, d in mini_batch:
-            greedy_action = np.argmax(self.borda_values[obs[0]])
+            greedy_action = np.argmax(self.compute_borda_scores(obs[0]))
             if not d:
                 target = self.gamma * self.target_action_nets[greedy_action].predict(obs)[0]
                 target[ordinal] += 1
@@ -72,28 +65,29 @@ class DQNAgent:
             # fit predicted value of previous action in previous observation to target value of max_action
             self.eval_action_nets[prev_act].fit(prev_obs, [[target]], verbose=0)
 
-    # Updates borda_values for one observation given the ordinal_values
-    def update_borda_scores(self, prev_obs):
+    # Computes borda_values for one observation given the ordinal_values
+    def compute_borda_scores(self, obs):
         # sum up all ordinal values per action for given observation
         ordinal_value_sum_per_action = np.zeros(self.n_actions)
         for action_a in range(self.n_actions):
-            for ordinal_value in self.eval_action_nets[action_a].predict(prev_obs)[0]:
+            for ordinal_value in self.eval_action_nets[action_a].predict(obs)[0]:
                 ordinal_value_sum_per_action[action_a] += ordinal_value
 
         # count actions whose ordinal value sum is not zero (no comparision possible for actions without ordinal_value)
         non_zero_action_count = np.count_nonzero(ordinal_value_sum_per_action)
         actions_to_compare_count = non_zero_action_count - 1
 
+        borda_scores = []
         # compute borda_values for action_a (probability that action_a wins against any other action)
         for action_a in range(self.n_actions):
             # if action has not yet recorded any ordinal values, action has to be played (set borda_value to 1.0)
             if ordinal_value_sum_per_action[action_a] == 0:
-                self.borda_values[prev_obs, action_a] = 1.0
+                borda_scores.append(1.0)
                 continue
 
             if actions_to_compare_count < 1:
                 # set lower than 1.0 (borda_value for zero_actions is 1.0)
-                self.borda_values[prev_obs, action_a] = 0.5
+                borda_scores.append(0.5)
             else:
                 # over all actions: sum up the probabilities that action_a wins against the given action
                 winning_probability_a_sum = 0
@@ -110,8 +104,8 @@ class DQNAgent:
                         # running ordinal probability that action_b is worse than current investigated ordinal
                         worse_probability_b = 0
                         # predict ordinal values for action a and b
-                        ordinal_values_a = self.eval_action_nets[action_a].predict(prev_obs)[0]
-                        ordinal_values_b = self.eval_action_nets[action_b].predict(prev_obs)[0]
+                        ordinal_values_a = self.eval_action_nets[action_a].predict(obs)[0]
+                        ordinal_values_b = self.eval_action_nets[action_b].predict(obs)[0]
                         for ordinal_count in range(self.n_ordinals):
                             ordinal_probability_a = ordinal_values_a[ordinal_count] \
                                                     / ordinal_value_sum_per_action[action_a]
@@ -123,11 +117,12 @@ class DQNAgent:
                             worse_probability_b += ordinal_probability_b
                         winning_probability_a_sum += winning_probability_a
                 # normalize summed up probabilities with number of actions that have been compared
-                self.borda_values[prev_obs, action_a] = winning_probability_a_sum / actions_to_compare_count
+                borda_scores.append(winning_probability_a_sum / actions_to_compare_count)
+        return borda_scores
 
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.borda_values[obs])
+        greedy_action = np.argmax(self.compute_borda_scores(obs))
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)

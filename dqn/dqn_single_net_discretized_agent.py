@@ -5,7 +5,6 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import random
-import itertools
 
 
 class DQNAgent:
@@ -17,7 +16,6 @@ class DQNAgent:
         self.n_actions = n_actions
         self.n_inputs = observation_dim
         self.observation_space = self.init_observation_space()
-        self.observation_to_index = self.build_obs_dict(self.observation_space)
 
         self.batch_size = batch_size
         self.memory = deque(maxlen=memory_len)
@@ -46,18 +44,6 @@ class DQNAgent:
         pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
         pole_theta_vel_space = np.linspace(-4, 4, 10)
         return [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
-
-    @staticmethod
-    def build_obs_dict(observation_space):
-        # List of all possible discrete observations
-        observation_range = [range(len(i) + 1) for i in observation_space]
-        # Dictionary that maps discretized observations to array indices
-        observation_to_index = {}
-        index_counter = 0
-        for observation in list(itertools.product(*observation_range)):
-            observation_to_index[observation] = index_counter
-            index_counter += 1
-        return observation_to_index
 
     def update(self, prev_obs, prev_act, obs, reward, episode_reward, done):
         self.remember(prev_obs, prev_act, obs, reward, done)
