@@ -8,7 +8,7 @@ import random
 
 
 class DQNAgent:
-    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, replace_target_iter, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, observation_dim, batch_size, memory_len, replace_target_iter):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon

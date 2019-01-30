@@ -8,7 +8,7 @@ import random
 
 
 class DQNAgent:
-    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, n_observations, observation_dim, batch_size, memory_len, replace_target_iter, randomize):
+    def __init__(self, alpha, gamma, epsilon, epsilon_min, n_actions, n_ordinals, observation_dim, batch_size, memory_len, replace_target_iter):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
@@ -55,7 +55,7 @@ class DQNAgent:
 
         mini_batch = random.sample(self.memory, self.batch_size)
         for prev_obs, prev_act, obs, ordinal, d in mini_batch:
-            greedy_action = np.argmax(self.compute_borda_scores(obs[0]))
+            greedy_action = np.argmax(self.compute_borda_scores(obs))
             if not d:
                 target = self.gamma * self.target_action_nets[greedy_action].predict(obs)[0]
                 target[ordinal] += 1
