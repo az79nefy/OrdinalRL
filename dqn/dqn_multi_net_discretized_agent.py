@@ -15,7 +15,6 @@ class DQNAgent:
         self.epsilon_min = epsilon_min
         self.n_actions = n_actions
         self.n_inputs = observation_dim
-        self.observation_space = self.init_observation_space()
 
         self.batch_size = batch_size
         self.memory = deque(maxlen=memory_len)
@@ -36,15 +35,6 @@ class DQNAgent:
         neural_net.add(Dense(1, activation='linear'))
         neural_net.compile(loss='mse', optimizer=Adam(lr=self.alpha))
         return neural_net
-
-    # Defines discrete observation space
-    @staticmethod
-    def init_observation_space():
-        cart_pos_space = np.linspace(-2.4, 2.4, 10)
-        cart_vel_space = np.linspace(-4, 4, 10)
-        pole_theta_space = np.linspace(-0.20943951, 0.20943951, 10)
-        pole_theta_vel_space = np.linspace(-4, 4, 10)
-        return [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
 
     def update(self, prev_obs, prev_act, obs, reward, episode_reward, done):
         self.remember(prev_obs, prev_act, obs, reward, done)
@@ -91,10 +81,7 @@ class DQNAgent:
         self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
 
     def preprocess_observation(self, obs):
-        discrete_observation = []
-        for obs_idx in range(len(obs)):
-            discrete_observation.append(int(np.digitize(obs[obs_idx], self.observation_space[obs_idx])))
-        return np.reshape(discrete_observation, [1, self.n_inputs])
+        return np.reshape(obs, [1, self.n_inputs])
 
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod
