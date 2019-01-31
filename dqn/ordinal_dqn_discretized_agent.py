@@ -54,6 +54,7 @@ class DQNAgent:
         self.replay_counter += 1
 
         mini_batch = random.sample(self.memory, self.batch_size)
+        x_batch, y_batch = [[] for _ in range(self.n_actions)], [[] for _ in range(self.n_actions)]
         for prev_obs, prev_act, obs, ordinal, d in mini_batch:
             greedy_action = np.argmax(self.compute_borda_scores(obs))
             if not d:
@@ -63,7 +64,12 @@ class DQNAgent:
                 target = np.zeros(self.n_ordinals)
                 target[ordinal] += 1
             # fit predicted value of previous action in previous observation to target value of max_action
-            self.eval_action_nets[prev_act].fit(prev_obs, [[target]], verbose=0)
+            x_batch[prev_act].append(prev_obs[0])
+            y_batch[prev_act].append(target)
+        for a in range(self.n_actions):
+            if len(x_batch[a]) != 0:
+                self.eval_action_nets[a].fit(np.array(x_batch[a]), np.array(y_batch[a]), batch_size=len(x_batch[a]),
+                                                 verbose=0)
 
     # Computes borda_values for one observation given the ordinal_values
     def compute_borda_scores(self, obs):
