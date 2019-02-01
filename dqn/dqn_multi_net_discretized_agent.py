@@ -68,12 +68,15 @@ class DQNAgent:
             if len(x_batch[a]) != 0:
                 self.eval_action_nets[a].fit(np.array(x_batch[a]), np.array(y_batch[a]), batch_size=len(x_batch[a]), verbose=0)
 
-    # Chooses action with epsilon greedy exploration policy
-    def choose_action(self, obs):
+    def get_greedy_action(self, obs):
         action_predictions = []
         for act_net in self.eval_action_nets:
             action_predictions.append(act_net.predict(obs)[0])
-        greedy_action = np.argmax(action_predictions)
+        return np.argmax(action_predictions)
+
+    # Chooses action with epsilon greedy exploration policy
+    def choose_action(self, obs):
+        greedy_action = self.get_greedy_action(obs)
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)

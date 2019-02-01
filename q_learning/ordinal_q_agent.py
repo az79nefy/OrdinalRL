@@ -25,7 +25,7 @@ class QAgent:
 
     # Updates ordinal_values based on probability of ordinal reward occurrence for each action
     def update_ordinal_values(self, prev_obs, prev_act, obs, ordinal):
-        greedy_action = np.argmax(self.compute_borda_scores(obs))
+        greedy_action = self.get_greedy_action(obs)
         # reduce old data weight
         for i in range(self.n_ordinals):
             self.ordinal_values[prev_obs, prev_act, i] *= (1 - self.alpha)
@@ -86,9 +86,12 @@ class QAgent:
                 borda_scores.append(winning_probability_a_sum / actions_to_compare_count)
         return borda_scores
 
+    def get_greedy_action(self, obs):
+        return np.argmax(self.compute_borda_scores(obs))
+
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.compute_borda_scores(obs))
+        greedy_action = self.get_greedy_action(obs)
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)

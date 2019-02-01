@@ -37,9 +37,12 @@ class SarsaLambdaAgent:
         q_target = rew + self.gamma * self.q_values[obs, act]
         self.q_values = self.q_values + self.alpha * (q_target - q_old) * self.eligibility_trace
 
+    def get_greedy_action(self, obs):
+        return np.argmax(self.q_values[obs])
+
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.q_values[obs])
+        greedy_action = self.get_greedy_action(obs)
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)

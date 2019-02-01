@@ -53,9 +53,12 @@ class QAgent:
         q_new = (1 - self.alpha) * q_old + self.alpha * (rew + self.gamma * np.max(self.q_values[obs]))
         self.q_values[prev_obs, prev_act] = q_new
 
+    def get_greedy_action(self, obs):
+        return np.argmax(self.q_values[obs])
+
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.q_values[obs])
+        greedy_action = self.get_greedy_action(obs)
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)

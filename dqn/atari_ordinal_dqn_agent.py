@@ -64,7 +64,7 @@ class DQNAgent:
         mini_batch = random.sample(self.memory, self.batch_size)
         x_batch, y_batch = [[] for _ in range(self.n_actions)], [[] for _ in range(self.n_actions)]
         for prev_obs, prev_act, obs, ordinal, d in mini_batch:
-            greedy_action = np.argmax(self.compute_borda_scores(obs))
+            greedy_action = self.get_greedy_action(obs)
             if not d:
                 target = self.gamma * self.target_action_nets[greedy_action].predict(self.convert(obs))[0]
                 target[ordinal] += 1
@@ -136,9 +136,12 @@ class DQNAgent:
                 borda_scores.append(winning_probability_a_sum / actions_to_compare_count)
         return borda_scores
 
+    def get_greedy_action(self, obs):
+        return np.argmax(self.compute_borda_scores(obs))
+
     # Chooses action with epsilon greedy exploration policy
     def choose_action(self, obs):
-        greedy_action = np.argmax(self.compute_borda_scores(obs))
+        greedy_action = self.get_greedy_action(obs)
         # choose random action with probability epsilon
         if random.random() < self.epsilon:
             return random.randrange(self.n_actions)
