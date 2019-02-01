@@ -77,8 +77,9 @@ class DQNAgent:
         # gradually reduce epsilon after every done episode
         self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
 
-    def preprocess_observation(self, obs):
-        return np.reshape(obs, [1, self.n_inputs])
+    @staticmethod
+    def preprocess_observation(obs):
+        return np.expand_dims(obs, axis=0)
 
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod
