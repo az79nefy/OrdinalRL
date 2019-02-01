@@ -68,16 +68,18 @@ class DQNAgent:
             y_batch[prev_act].append(target)
         for a in range(self.n_actions):
             if len(x_batch[a]) != 0:
-                self.eval_action_nets[a].fit(np.array(x_batch[a]), np.array(y_batch[a]), batch_size=len(x_batch[a]),
-                                                 verbose=0)
+                self.eval_action_nets[a].fit(np.array(x_batch[a]), np.array(y_batch[a]), batch_size=len(x_batch[a]), verbose=0)
 
     # Computes borda_values for one observation given the ordinal_values
     def compute_borda_scores(self, obs):
         # sum up all ordinal values per action for given observation
         ordinal_value_sum_per_action = np.zeros(self.n_actions)
+        ordinal_values_per_action = [[] for _ in range(self.n_actions)]
         for action_a in range(self.n_actions):
             for ordinal_value in self.eval_action_nets[action_a].predict(obs)[0]:
                 ordinal_value_sum_per_action[action_a] += ordinal_value
+                ordinal_values_per_action[action_a].append(ordinal_value)
+        ordinal_values_per_action = np.array(ordinal_values_per_action)
 
         # count actions whose ordinal value sum is not zero (no comparision possible for actions without ordinal_value)
         non_zero_action_count = np.count_nonzero(ordinal_value_sum_per_action)
@@ -110,8 +112,8 @@ class DQNAgent:
                         # running ordinal probability that action_b is worse than current investigated ordinal
                         worse_probability_b = 0
                         # predict ordinal values for action a and b
-                        ordinal_values_a = self.eval_action_nets[action_a].predict(obs)[0]
-                        ordinal_values_b = self.eval_action_nets[action_b].predict(obs)[0]
+                        ordinal_values_a = ordinal_values_per_action[action_a]
+                        ordinal_values_b = ordinal_values_per_action[action_b]
                         for ordinal_count in range(self.n_ordinals):
                             ordinal_probability_a = ordinal_values_a[ordinal_count] \
                                                     / ordinal_value_sum_per_action[action_a]
