@@ -64,9 +64,10 @@ class DQNAgent:
         for prev_obs, prev_act, obs, rew, d in mini_batch:
             if not d:
                 action_predictions = []
-                for act_net in self.target_action_nets:
+                for act_net in self.eval_action_nets:
                     action_predictions.append(act_net.predict(self.convert(obs))[0])
-                target = rew + self.gamma * np.max(action_predictions)
+                best_act = np.argmax(action_predictions)
+                target = rew + self.gamma * self.target_action_nets[best_act].predict(self.convert(obs))[0]
             else:
                 target = rew
             # fit predicted value of previous action in previous observation to target value of max_action
