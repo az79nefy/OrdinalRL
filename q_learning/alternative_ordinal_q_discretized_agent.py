@@ -58,6 +58,26 @@ class QAgent:
         # add new data point
         self.ordinal_values[prev_obs, prev_act, ordinal] += self.alpha
 
+    # Computes the Borda count for one observation given the ordinal_values
+    def compute_borda_counts(self, obs):
+        # sum up all ordinal values per action for given observation
+        ordinal_value_sum_per_action = np.zeros(self.n_actions)
+        for action_a in range(self.n_actions):
+            for ordinal_value in self.ordinal_values[obs, action_a]:
+                ordinal_value_sum_per_action[action_a] += ordinal_value
+
+        borda_counts = []
+        for action_a in range(self.n_actions):
+            action_score = 0
+            ordinal_values = self.ordinal_values[obs, action_a]
+            ordinal_worth = 1.0
+            for ordinal_value in reversed(ordinal_values):
+                ordinal_probability = ordinal_value / ordinal_value_sum_per_action[action_a]
+                action_score += ordinal_probability * ordinal_worth
+                ordinal_worth = ordinal_worth / 2
+            borda_counts.append(action_score)
+        return borda_counts
+
     # Computes borda_values for one observation given the ordinal_values
     def compute_borda_scores(self, obs):
         # sum up all ordinal values per action for given observation
@@ -225,29 +245,9 @@ class QAgent:
             possible_actions.pop(np.argmin(borda_scores))
         return possible_actions[0]
 
-    # Computes the Borda count for one observation given the ordinal_values
-    def compute_borda_count(self, obs):
-        # sum up all ordinal values per action for given observation
-        ordinal_value_sum_per_action = np.zeros(self.n_actions)
-        for action_a in range(self.n_actions):
-            for ordinal_value in self.ordinal_values[obs, action_a]:
-                ordinal_value_sum_per_action[action_a] += ordinal_value
-
-        borda_count = []
-        for action_a in range(self.n_actions):
-            action_score = 0
-            ordinal_values = self.ordinal_values[obs, action_a]
-            ordinal_worth = 1.0
-            for ordinal_value in reversed(ordinal_values):
-                ordinal_probability = ordinal_value / ordinal_value_sum_per_action[action_a]
-                action_score += ordinal_probability * ordinal_worth
-                ordinal_worth = ordinal_worth / 2
-            borda_count.append(action_score)
-        return borda_count
-
     def get_greedy_action(self, obs):
-        return np.argmax(self.compute_borda_scores(obs))
-        # return np.argmax(self.compute_borda_count(obs))
+        return np.argmax(self.compute_borda_counts(obs))
+        # return np.argmax(self.compute_borda_scores(obs))
         # return self.compute_plurality_runoff_borda_winner(obs)
         # return self.compute_instant_runoff_borda_winner(obs)
 
