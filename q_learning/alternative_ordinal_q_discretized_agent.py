@@ -130,6 +130,61 @@ class QAgent:
                 borda_scores.append(winning_probability_a_sum / actions_to_compare_count)
         return borda_scores
 
+    # Computes action win_rates of pairwise action comparision of borda_scores
+    def compute_copeland_win_rate(self, obs):
+        # sum up all ordinal values per action for given observation
+        ordinal_value_sum_per_action = np.zeros(self.n_actions)
+        for action_a in range(self.n_actions):
+            for ordinal_value in self.ordinal_values[obs, action_a]:
+                ordinal_value_sum_per_action[action_a] += ordinal_value
+
+        # count actions whose ordinal value sum is not zero (no comparision possible for actions without ordinal_value)
+        non_zero_action_count = np.count_nonzero(ordinal_value_sum_per_action)
+        actions_to_compare_count = non_zero_action_count - 1
+
+        win_rates = []
+        # compute win_rate for action_a
+        for action_a in range(self.n_actions):
+            # if action has not yet recorded any ordinal values, action has to be played (set win_rate to 1.0)
+            if ordinal_value_sum_per_action[action_a] == 0:
+                win_rates.append(1.0)
+                continue
+
+            if actions_to_compare_count < 1:
+                # set lower than 1.0 (win_rate for zero_actions is 1.0)
+                win_rates.append(0.5)
+            else:
+                # over all actions: count the number of times that action_a wins against the given action
+                win_counter_a = 0
+                # compare action_a to all other actions
+                for action_b in range(self.n_actions):
+                    if action_a == action_b:
+                        continue
+                    # not comparable if action_b has no ordinal_values
+                    if ordinal_value_sum_per_action[action_b] == 0:
+                        continue
+                    else:
+                        # probability that action_a wins against action_b
+                        winning_probability_a = 0
+                        # running ordinal probability that action_b is worse than current investigated ordinal
+                        worse_probability_b = 0
+                        for ordinal_count in range(self.n_ordinals):
+                            ordinal_probability_a = self.ordinal_values[obs, action_a, ordinal_count] \
+                                                    / ordinal_value_sum_per_action[action_a]
+                            # ordinal_probability_b is also the tie probability
+                            ordinal_probability_b = (self.ordinal_values[obs, action_b, ordinal_count] /
+                                                     ordinal_value_sum_per_action[action_b])
+                            winning_probability_a += ordinal_probability_a * \
+                                (worse_probability_b + ordinal_probability_b / 2.0)
+                            worse_probability_b += ordinal_probability_b
+                        if winning_probability_a > 0.5:
+                            win_counter_a += 1.0
+                        elif winning_probability_a == 0.5:
+                            win_counter_a += 0.5
+                # normalize win_counter with number of actions that have been compared to compute win_rate
+                win_rates.append(win_counter_a / actions_to_compare_count)
+        return win_rates
+
     def compute_plurality_runoff_borda_winner(self, obs):
         # sum up all ordinal values per action for given observation
         ordinal_value_sum_per_action = np.zeros(self.n_actions)
@@ -246,8 +301,9 @@ class QAgent:
         return possible_actions[0]
 
     def get_greedy_action(self, obs):
-        return np.argmax(self.compute_borda_counts(obs))
+        # return np.argmax(self.compute_borda_counts(obs))
         # return np.argmax(self.compute_borda_scores(obs))
+        return np.argmax(self.compute_copeland_win_rate(obs))
         # return self.compute_plurality_runoff_borda_winner(obs)
         # return self.compute_instant_runoff_borda_winner(obs)
 
