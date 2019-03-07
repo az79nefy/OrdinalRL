@@ -108,7 +108,7 @@ class DQNAgent:
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod
     def check_win_condition(reward, episode_reward, done):
-        if done and reward == 20:
+        if done and episode_reward > 20:
             return True
         else:
             return False

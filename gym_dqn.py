@@ -1,6 +1,6 @@
 import gym
 import gym_wrappers
-from dqn.ordinal_dqn_discretized_agent import DQNAgent
+from dqn.atari_ordinal_dqn_agent import DQNAgent
 
 
 '''  ####  CONFIGURATION  ####  '''
@@ -8,9 +8,9 @@ from dqn.ordinal_dqn_discretized_agent import DQNAgent
 ''' ENVIRONMENT '''
 
 # Choose environment and adjust agent (by import), n_ordinals, n_observations and observation_dim based on environment
-env = gym.make('CartPole-v0')
-n_ordinals = 2
-observation_dim = 4
+env = gym_wrappers.MainGymWrapper.wrap(gym.make('Breakout-v0'))
+n_ordinals = 3
+observation_dim = (4, 84, 84)
 
 ''' HYPERPARAMETERS '''
 

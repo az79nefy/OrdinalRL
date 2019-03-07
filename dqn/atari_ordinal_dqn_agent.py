@@ -162,7 +162,9 @@ class DQNAgent:
 
     # Mapping of reward value to ordinal reward (has to be configured per game)
     def reward_to_ordinal(self, reward, episode_reward, done):
-        if reward == 0:
+        if reward == -1:
+            return 0
+        elif reward == 0:
             return 0
         else:
             return 1
@@ -170,7 +172,7 @@ class DQNAgent:
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod
     def check_win_condition(reward, episode_reward, done):
-        if done and reward == 20:
+        if done and episode_reward > 20:
             return True
         else:
             return False

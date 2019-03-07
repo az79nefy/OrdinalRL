@@ -62,7 +62,7 @@ class DQNAgent:
         for prev_obs, prev_act, obs, rew, d in mini_batch:
             prediction = self.eval_model.predict(self.convert(prev_obs))
             if not d:
-                best_act = np.argmax(self.eval_model.predict(obs)[0])
+                best_act = np.argmax(self.eval_model.predict(self.convert(obs))[0])
                 target = rew + self.gamma * self.target_model.predict(self.convert(obs))[0, best_act]
             else:
                 target = rew
@@ -99,7 +99,7 @@ class DQNAgent:
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod
     def check_win_condition(reward, episode_reward, done):
-        if done and reward == 20:
+        if done and episode_reward > 20:
             return True
         else:
             return False
