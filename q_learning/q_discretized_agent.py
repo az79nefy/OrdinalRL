@@ -45,6 +45,7 @@ class QAgent:
         return observation_to_index
 
     def update(self, prev_obs, prev_act, obs, reward, episode_reward, done):
+        reward = self.remap_reward(reward, episode_reward, done)
         self.update_q_values(prev_obs, prev_act, obs, reward)
 
     # Updates Q_Values based on received reward
@@ -75,6 +76,13 @@ class QAgent:
         for obs_idx in range(len(obs)):
             discrete_observation.append(int(np.digitize(obs[obs_idx], self.observation_space[obs_idx])))
         return self.observation_to_index[tuple(discrete_observation)]
+
+    # Remapping of reward value for CartPole environment (-1 for failure, 0 else)
+    def remap_reward(self, reward, episode_reward, done):
+        if done and not self.check_win_condition(reward, episode_reward, done):
+            return -1
+        else:
+            return 0
 
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod

@@ -36,6 +36,7 @@ class DQNAgent:
         return neural_net
 
     def update(self, prev_obs, prev_act, obs, reward, episode_reward, done):
+        reward = self.remap_reward(reward, episode_reward, done)
         self.remember(prev_obs, prev_act, obs, reward, done)
         if len(self.memory) > self.batch_size:
             self.replay()
@@ -84,6 +85,13 @@ class DQNAgent:
     @staticmethod
     def preprocess_observation(obs):
         return np.expand_dims(obs, axis=0)
+
+    # Remapping of reward value for CartPole environment (-1 for failure, 0 else)
+    def remap_reward(self, reward, episode_reward, done):
+        if done and not self.check_win_condition(reward, episode_reward, done):
+            return -1
+        else:
+            return 0
 
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod

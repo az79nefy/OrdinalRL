@@ -1,5 +1,5 @@
 import gym
-from q_learning.ordinal_q_agent import QAgent
+from q_learning.ordinal_q_discretized_agent import QAgent
 
 
 '''  ####  CONFIGURATION  ####  '''
@@ -7,9 +7,9 @@ from q_learning.ordinal_q_agent import QAgent
 ''' ENVIRONMENT '''
 
 # Choose environment and adjust agent (import at the top), n_ordinals and n_observations based on environment
-env = gym.make('Taxi-v2')
-n_ordinals = 3
-n_observations = env.observation_space.n
+env = gym.make('CartPole-v0')
+n_ordinals = 2
+n_observations = 11**4
 
 ''' HYPERPARAMETERS '''
 
@@ -21,7 +21,7 @@ n_observations = env.observation_space.n
 # n_actions: Number of possible actions
 # n_ordinals: Number of ordinals (possible different rewards)
 # n_observations: Number of possible observations
-agent = QAgent(alpha=0.1, gamma=0.9, epsilon=1.0, epsilon_min=0.1, randomize=False,
+agent = QAgent(alpha=0.1, gamma=0.9, epsilon=1.0, epsilon_min=0.1, randomize=True,
                n_actions=env.action_space.n, n_ordinals=n_ordinals, n_observations=n_observations)
 
 # Number of episodes to be run
