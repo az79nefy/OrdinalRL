@@ -48,7 +48,7 @@ class DQNAgent:
         ordinal = self.reward_to_ordinal(reward, episode_reward, done)
         self.update_counter += 1
         self.remember(prev_obs, prev_act, obs, ordinal, done)
-        if self.update_counter % 10 == 0 and len(self.memory) > self.batch_size:
+        if len(self.memory) > self.batch_size:
             self.replay()
 
     def remember(self, prev_obs, prev_act, obs, rew, d):
