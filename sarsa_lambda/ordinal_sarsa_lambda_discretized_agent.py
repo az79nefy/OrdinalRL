@@ -163,7 +163,7 @@ class SarsaLambdaAgent:
         # store average episode reward and win rate over last episodes for plotting purposes
         self.average_rewards.append(average_reward)
         self.win_rates.append(win_rate)
-        print("{}\t{}".format(average_reward, win_rate))
+        print("{}\t{}\t{}".format(i_episode + 1, average_reward, win_rate))
 
     # Plots win rate and average score over all episodes
     def plot(self, n_episodes, step_size):
