@@ -33,10 +33,10 @@ class QAgent:
         return np.argmax(self.q_values[obs])
 
     # Chooses action with epsilon greedy exploration policy
-    def choose_action(self, obs):
+    def choose_action(self, obs, greedy):
         greedy_action = self.get_greedy_action(obs)
         # choose random action with probability epsilon
-        if random.random() < self.epsilon:
+        if not greedy and random.random() < self.epsilon:
             return random.randrange(self.n_actions)
         # greedy action is chosen with probability (1 - epsilon)
         else:
@@ -59,7 +59,7 @@ class QAgent:
 
     def evaluate(self, i_episode, episode_rewards, episode_wins):
         # compute average episode reward and win rate over last episodes
-        average_reward = sum(episode_rewards) / len(episode_rewards)
+        average_reward = round(sum(episode_rewards) / len(episode_rewards), 2)
         win_rate = sum(episode_wins) / len(episode_wins)
         # store average episode reward and win rate over last episodes for plotting purposes
         self.average_rewards.append(average_reward)
