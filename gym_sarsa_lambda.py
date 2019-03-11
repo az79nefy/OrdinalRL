@@ -38,30 +38,32 @@ episode_rewards = []
 
 for i_episode in range(n_episodes):
     episode_reward = 0
+    greedy_episode = i_episode % step_size == step_size-1
     prev_observation = agent.preprocess_observation(env.reset())
-    prev_action = agent.choose_action(prev_observation, greedy=i_episode % step_size == step_size-1)
+    prev_action = agent.choose_action(prev_observation, greedy=greedy_episode)
 
     while True:
         observation, reward, done, info = env.step(prev_action)
         observation = agent.preprocess_observation(observation)
         # next action to be executed (based on new observation)
-        action = agent.choose_action(observation, greedy=i_episode % step_size == step_size-1)
+        action = agent.choose_action(observation, greedy=greedy_episode)
         episode_reward += reward
-        agent.update(prev_observation, prev_action, observation, action, reward, episode_reward, done)
+        if not greedy_episode:
+            agent.update(prev_observation, prev_action, observation, action, reward, episode_reward, done)
 
         prev_observation = observation
         prev_action = action
 
         if done:
             agent.end_episode(n_episodes)
-            if i_episode % step_size == step_size-1:
+            if greedy_episode:
                 print("{}\t{}\toptimal".format(i_episode + 1, episode_reward))
                 agent.evaluate(i_episode, episode_rewards, episode_wins)
                 # reset running reward and win statistics
                 episode_rewards = []
                 episode_wins = []
-            # update reward and win statistics
             else:
+                # update reward and win statistics
                 episode_rewards.append(episode_reward)
                 episode_wins.append(float(agent.check_win_condition(reward, episode_reward, done)))
             break
