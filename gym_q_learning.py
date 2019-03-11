@@ -25,7 +25,7 @@ agent = QAgent(alpha=0.1, gamma=0.9, epsilon=1.0, epsilon_min=0.1, randomize=Tru
                n_actions=env.action_space.n, n_ordinals=n_ordinals, n_observations=n_observations)
 
 # Number of episodes to be run
-n_episodes = 2000
+n_episodes = 50000
 # Step size for evaluation
 step_size = 100
 
