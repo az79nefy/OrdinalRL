@@ -14,7 +14,7 @@ class SarsaLambdaAgent:
 
         # Q_Values (2-dimensional array with float-value for each action (e.g. [Left, Down, Right, Up]) in each observation)
         if randomize:
-            self.q_values = np.full((n_observations, n_actions), random.random()/10)
+            self.q_values = np.random.random_sample((n_observations, n_actions)) * 0.1
         else:
             self.q_values = np.full((n_observations, n_actions), 0.0)
 
