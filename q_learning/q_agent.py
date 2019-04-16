@@ -21,6 +21,7 @@ class QAgent:
         self.average_rewards = []
 
     def update(self, prev_obs, prev_act, obs, reward, episode_reward, done):
+        reward = self.remap_reward(reward, episode_reward, done)
         self.update_q_values(prev_obs, prev_act, obs, reward)
 
     # Updates Q_Values based on received reward
@@ -48,6 +49,10 @@ class QAgent:
 
     def preprocess_observation(self, obs):
         return obs
+
+    # Remapping of reward value for CartPole environment (-1 for failure, 0 else)
+    def remap_reward(self, reward, episode_reward, done):
+        return reward
 
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod

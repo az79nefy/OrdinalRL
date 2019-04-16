@@ -24,6 +24,7 @@ class SarsaLambdaAgent:
         self.average_rewards = []
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
+        reward = self.remap_reward(reward, episode_reward, done)
         # increase eligibility trace entry for executed observation-action pair
         self.eligibility_trace[prev_obs, :] *= 0
         self.eligibility_trace[prev_obs, prev_act] = 1
@@ -58,6 +59,10 @@ class SarsaLambdaAgent:
 
     def preprocess_observation(self, obs):
         return obs
+
+    # Remapping of reward value for CartPole environment (-1 for failure, 0 else)
+    def remap_reward(self, reward, episode_reward, done):
+        return reward
 
     # Returns Boolean, whether the win-condition of the environment has been met
     @staticmethod
