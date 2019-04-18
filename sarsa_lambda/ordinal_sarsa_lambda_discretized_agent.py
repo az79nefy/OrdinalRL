@@ -46,10 +46,9 @@ class SarsaLambdaAgent:
         return observation_to_index
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
-        # increase eligibility trace entry for executed observation-action pair
-        self.eligibility_trace[prev_obs, :] *= 0
-        self.eligibility_trace[prev_obs, prev_act] = 1
         ordinal = self.reward_to_ordinal(reward, episode_reward, done)
+        # increase eligibility trace entry for executed observation-action pair
+        self.eligibility_trace[prev_obs, prev_act] += 1
         # update ordinal_values with received ordinal
         self.update_ordinal_values(prev_obs, prev_act, obs, act, ordinal)
         # decay eligibility trace after update

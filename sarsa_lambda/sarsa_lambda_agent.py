@@ -26,8 +26,7 @@ class SarsaLambdaAgent:
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
         reward = self.remap_reward(reward, episode_reward, done)
         # increase eligibility trace entry for executed observation-action pair
-        self.eligibility_trace[prev_obs, :] *= 0
-        self.eligibility_trace[prev_obs, prev_act] = 1
+        self.eligibility_trace[prev_obs, prev_act] += 1
         self.update_q_values(prev_obs, prev_act, obs, act, reward)
         # decay eligibility trace after update
         self.eligibility_trace *= self.gamma * self.lambda_
@@ -36,7 +35,7 @@ class SarsaLambdaAgent:
     def update_q_values(self, prev_obs, prev_act, obs, act, rew):
         q_old = self.q_values[prev_obs, prev_act]
         q_target = rew + self.gamma * self.q_values[obs, act]
-        self.q_values = self.q_values + self.alpha * (q_target - q_old) * self.eligibility_trace
+        self.q_values += self.alpha * (q_target - q_old) * self.eligibility_trace
 
     def get_greedy_action(self, obs):
         return np.argmax(self.q_values[obs])
