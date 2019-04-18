@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 import matplotlib.pyplot as plt
 import random
 
@@ -18,24 +19,25 @@ class SarsaLambdaAgent:
         else:
             self.q_values = np.full((n_observations, n_actions), 0.0)
 
-        # Eligibility Trace (2-dimensional array with float-values for each action in each observation)
-        self.eligibility_trace = np.full((n_observations, n_actions), 0.0)
+        # History of visited state-action-pairs for eligibility trace computation
+        self.history = deque(maxlen=20)
         self.win_rates = []
         self.average_rewards = []
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
         reward = self.remap_reward(reward, episode_reward, done)
-        # increase eligibility trace entry for executed observation-action pair
-        self.eligibility_trace[prev_obs, prev_act] += 1
+        # add executed observation-action pair to history
+        self.history.append((prev_obs, prev_act))
         self.update_q_values(prev_obs, prev_act, obs, act, reward)
-        # decay eligibility trace after update
-        self.eligibility_trace *= self.gamma * self.lambda_
 
     # Updates Q_Values based on received reward
     def update_q_values(self, prev_obs, prev_act, obs, act, rew):
         q_old = self.q_values[prev_obs, prev_act]
         q_target = rew + self.gamma * self.q_values[obs, act]
-        self.q_values += self.alpha * (q_target - q_old) * self.eligibility_trace
+        for i in range(len(self.history)):
+            hist_obs, hist_act = self.history[i]
+            eligibility_trace = (self.lambda_ * self.gamma) ** (len(self.history) - 1 - i)
+            self.q_values[hist_obs, hist_act] += self.alpha * (q_target - q_old) * eligibility_trace
 
     def get_greedy_action(self, obs):
         return np.argmax(self.q_values[obs])
@@ -53,8 +55,8 @@ class SarsaLambdaAgent:
     def end_episode(self, n_episodes):
         # gradually reduce epsilon after every done episode
         self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
-        # reset eligibility trace after every episode
-        self.eligibility_trace *= 0
+        # reset history after every episode
+        self.history = deque(maxlen=20)
 
     def preprocess_observation(self, obs):
         return obs

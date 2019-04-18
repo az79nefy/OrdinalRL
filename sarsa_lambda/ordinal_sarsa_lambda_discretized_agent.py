@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 import matplotlib.pyplot as plt
 import random
 import itertools
@@ -19,8 +20,8 @@ class SarsaLambdaAgent:
         # Ordinal_Values (3-dimensional array with ordinal_value (array of floats) for each action in each observation)
         self.ordinal_values = np.full((n_observations, n_actions, n_ordinals), 0.0)
 
-        # Eligibility Trace (2-dimensional array with float-values for each action in each observation)
-        self.eligibility_trace = np.full((n_observations, n_actions), 0.0)
+        # History of visited state-action-pairs for eligibility trace computation
+        self.history = deque(maxlen=20)
         self.win_rates = []
         self.average_rewards = []
 
@@ -47,12 +48,10 @@ class SarsaLambdaAgent:
 
     def update(self, prev_obs, prev_act, obs, act, reward, episode_reward, done):
         ordinal = self.reward_to_ordinal(reward, episode_reward, done)
-        # increase eligibility trace entry for executed observation-action pair
-        self.eligibility_trace[prev_obs, prev_act] += 1
+        # add executed observation-action pair to history
+        self.history.append((prev_obs, prev_act))
         # update ordinal_values with received ordinal
         self.update_ordinal_values(prev_obs, prev_act, obs, act, ordinal)
-        # decay eligibility trace after update
-        self.eligibility_trace *= self.gamma * self.lambda_
 
     # Updates ordinal_values based on probability of ordinal reward occurrence for each action
     def update_ordinal_values(self, prev_obs, prev_act, obs, act, ordinal):
@@ -61,7 +60,10 @@ class SarsaLambdaAgent:
             rew = 1 if i == ordinal else 0
             ordinal_value_old = self.ordinal_values[prev_obs, prev_act, i]
             ordinal_value_target = rew + self.gamma * self.ordinal_values[obs, act, i]
-            self.ordinal_values[:, :, i] += self.alpha * (ordinal_value_target - ordinal_value_old) * self.eligibility_trace
+            for j in range(len(self.history)):
+                hist_obs, hist_act = self.history[j]
+                eligibility_trace = (self.lambda_ * self.gamma) ** (len(self.history) - 1 - j)
+                self.ordinal_values[hist_obs, hist_act, i] += self.alpha * (ordinal_value_target - ordinal_value_old) * eligibility_trace
 
     # Computes borda_values for one observation given the ordinal_values
     def compute_borda_scores(self, obs):
@@ -131,8 +133,8 @@ class SarsaLambdaAgent:
     def end_episode(self, n_episodes):
         # gradually reduce epsilon after every done episode
         self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
-        # reset eligibility trace after every episode
-        self.eligibility_trace *= 0
+        # reset history after every episode
+        self.history = deque(maxlen=20)
 
     def preprocess_observation(self, obs):
         discrete_observation = []
