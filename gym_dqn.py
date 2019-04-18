@@ -1,6 +1,5 @@
 import gym
-import gym_wrappers
-from dqn.atari_ordinal_dqn_agent import DQNAgent
+from dqn.ordinal_dqn_discretized_agent import DQNAgent
 
 
 '''  ####  CONFIGURATION  ####  '''
@@ -8,9 +7,9 @@ from dqn.atari_ordinal_dqn_agent import DQNAgent
 ''' ENVIRONMENT '''
 
 # Choose environment and adjust agent (by import), n_ordinals, n_observations and observation_dim based on environment
-env = gym_wrappers.MainGymWrapper.wrap(gym.make('Breakout-v0'))
-n_ordinals = 3
-observation_dim = (4, 84, 84)
+env = gym.make('CartPole-v0')
+n_ordinals = 2
+observation_dim = 4
 
 ''' HYPERPARAMETERS '''
 
@@ -25,11 +24,11 @@ observation_dim = (4, 84, 84)
 # n_actions: Number of possible actions
 # n_observations: Number of possible observations
 # n_ordinals: Number of ordinals (possible different rewards)
-agent = DQNAgent(alpha=0.001, gamma=0.9, epsilon=1.0, epsilon_min=0.1, observation_dim=observation_dim, batch_size=64,
-                 memory_len=20000, replace_target_iter=300, n_actions=env.action_space.n, n_ordinals=n_ordinals)
+agent = DQNAgent(alpha=0.0005, gamma=0.9, epsilon=1.0, epsilon_min=0.1, observation_dim=observation_dim, batch_size=64,
+                 memory_len=200000, replace_target_iter=300, n_actions=env.action_space.n, n_ordinals=n_ordinals)
 
 # Number of episodes to be run
-n_episodes = 200
+n_episodes = 400
 # Step size for evaluation
 step_size = 10
 

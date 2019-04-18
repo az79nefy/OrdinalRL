@@ -11,10 +11,22 @@ pole_theta_vel_space = np.linspace(-4, 4, 10)
 observation_space = [cart_pos_space, cart_vel_space, pole_theta_space, pole_theta_vel_space]
 
 # Acrobot-v1
-cos_theta1_space = np.linspace(-1, 1, 10)
-sin_theta1_space = np.linspace(-1, 1, 10)
-cos_theta2_space = np.linspace(-1, 1, 10)
-sin_theta2_space = np.linspace(-1, 1, 10)
-theta1_dot_space = np.linspace(-4 * np.pi, 4 * np.pi, 10)
-theta2_dot_space = np.linspace(-9 * np.pi, 9 * np.pi, 10)
+cos_theta1_space = np.linspace(-1, 1, 7)
+sin_theta1_space = np.linspace(-1, 1, 7)
+cos_theta2_space = np.linspace(-1, 1, 7)
+sin_theta2_space = np.linspace(-1, 1, 7)
+theta1_dot_space = np.linspace(-4 * np.pi, 4 * np.pi, 7)
+theta2_dot_space = np.linspace(-9 * np.pi, 9 * np.pi, 7)
 observation_space = [cos_theta1_space, sin_theta1_space, cos_theta2_space, sin_theta2_space, theta1_dot_space, theta2_dot_space]
+
+# LunarLander-v2
+observation_space_1 = np.linspace(-1, 1, 4)
+observation_space_2 = np.linspace(-1, 1, 4)
+observation_space_3 = np.linspace(-1, 1, 4)
+observation_space_4 = np.linspace(-1, 1, 4)
+observation_space_5 = np.linspace(-1, 1, 4)
+observation_space_6 = np.linspace(-1, 1, 4)
+observation_space_7 = np.linspace(-1, 1, 4)
+observation_space_8 = np.linspace(-1, 1, 4)
+return [observation_space_1, observation_space_2, observation_space_3, observation_space_4,
+        observation_space_5, observation_space_6, observation_space_7, observation_space_8]
