@@ -40,7 +40,7 @@ In order to adjust the agents to the environments, the following changes have to
 
 Afterwards open the python script of the imported agent and adjust following functions:
 
-- If environment is undiscretized: Change the `init_observation_space()` function to the respective code fragment in the `discretized_configs` file. For a new environment define this function accordingly
-- If agent is ordinal: Change the `reward_to_ordinal()` function according to the rewards of the environment.
+- If environment is undiscretized: Change the `init_observation_space()` function to the respective code fragment in the `discretized_configs` file or define this function accordingly for a new environment
+- If agent is ordinal: Change the `reward_to_ordinal()` function according to the rewards of the environment
 - If agent is not ordinal: Change the `remap_reward()` function if desired
 - Change the `check_win_condition()` function according to the win condition of the environment
