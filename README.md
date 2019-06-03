@@ -3,6 +3,10 @@ This project provides an experimental evaluation of ordinal reinforcement learni
 
 ## Installation
 
+This project was successfully tested on Linux and Windows.
+
+Download and install Python with pip from https://www.python.org/downloads/. Python versions above 2.7.9 and 3.4 already include pip.
+
 Clone this repository:
 
     git clone https://github.com/az79nefy/OrdinalRL.git
